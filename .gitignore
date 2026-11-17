@@ -1,0 +1,23 @@
+# Claude Code
+.claude/
+
+# Dependencias
+node_modules/
+.pnpm-store/
+
+# Builds
+.next/
+out/
+dist/
+coverage/
+
+# Entorno
+.env
+.env.*
+!.env.example
+
+# Sistema / editor
+.DS_Store
+*.log
+.vscode/*
+!.vscode/extensions.json
