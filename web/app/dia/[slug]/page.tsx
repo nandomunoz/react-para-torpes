@@ -26,7 +26,12 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
   if (!lesson) notFound();
   const week = weekByN(lesson.week);
   const { prev, next } = getNeighbours(slug);
-  const { content } = await compileMDX({ source: lesson.body, components: mdxComponents });
+  const { content } = await compileMDX({
+    source: lesson.body,
+    components: mdxComponents,
+    // El contenido es de este repositorio (de confianza): necesitamos props como criteria={[...]}.
+    options: { blockJS: false },
+  });
 
   return (
     <main className={`${container} max-w-3xl py-12`}>

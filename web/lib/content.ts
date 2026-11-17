@@ -43,7 +43,8 @@ function readLesson(file: string): Lesson {
 let cache: Lesson[] | null = null;
 
 export function getLessons(): Lesson[] {
-  if (cache) return cache;
+  // En desarrollo no cacheamos: así las lecciones nuevas aparecen sin reiniciar.
+  if (cache && process.env.NODE_ENV === "production") return cache;
   const lessons: Lesson[] = [];
   if (fs.existsSync(CONTENT_DIR)) {
     for (const dir of fs.readdirSync(CONTENT_DIR)) {

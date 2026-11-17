@@ -36,7 +36,7 @@ for (const dir of fs.readdirSync(contentDir).sort()) {
     // La semana 5 (Next.js) no se puede ejecutar en Sandpack: ahí el Playground es opcional.
     if (dir !== "semana5" && !/<Playground\b/.test(content)) fail(rel, "falta <Playground>");
     if (!/<Warning\b/.test(content)) fail(rel, "falta <Warning>");
-    try { await serialize(content); } catch (e) { fail(rel, `MDX inválido: ${String(e.message).split("\n")[0]}`); }
+    try { await serialize(content, { blockJS: false }); } catch (e) { fail(rel, `MDX inválido: ${String(e.message).split("\n")[0]}`); }
     if (!errors) console.log(`✓ ${rel}`);
   }
 }
