@@ -1,0 +1,118 @@
+---
+title: Repaso y mini proyecto de tareas
+week: 1
+day: "7"
+order: 7
+objective: Consolidar componentes, props, estado, eventos y renderizado condicional construyendo una lista de tareas.
+minutes: 60
+level: básico
+reading:
+  - title: Pensando en React
+    url: https://react.dev/learn/thinking-in-react
+  - title: Elegir la estructura del estado
+    url: https://react.dev/learn/choosing-the-state-structure
+  - title: Renderizar listas
+    url: https://react.dev/learn/rendering-lists
+---
+
+## Concepto
+
+Has llegado al día de repaso, y toca juntar todas las piezas. Esta semana viste componentes con JSX, props tipadas, estado con `useState`, eventos y renderizado condicional. Hoy los mezclamos en una lista de tareas, el "Hola mundo" de las apps con estado.
+
+Un buen truco al empezar un proyecto es pensar en tres preguntas. Qué datos tengo (un arreglo de tareas). Qué cambia con el tiempo (ese arreglo y el texto que se está escribiendo). Y qué piezas visuales hay (el formulario, la lista y cada elemento).
+
+La regla más importante: el estado de React no se modifica, se reemplaza. Para añadir, marcar o borrar tareas creas un arreglo nuevo con `spread`, `map` o `filter`. Esto es como corregir un examen en una hoja nueva en lugar de tachar la original.
+
+## Paso a paso
+
+<Step n={1} title="Modela los datos">
+
+Una tarea tiene un identificador, un texto y un indicador de si está hecha:
+
+```tsx
+type Tarea = {
+  id: number;
+  texto: string;
+  hecha: boolean;
+};
+```
+
+</Step>
+
+<Step n={2} title="Crea el estado">
+
+Necesitas dos estados: la lista de tareas y el texto del campo de entrada.
+
+```tsx
+const [tareas, setTareas] = useState<Tarea[]>([]);
+const [nueva, setNueva] = useState<string>("");
+```
+
+</Step>
+
+<Step n={3} title="Escribe las tres operaciones">
+
+Cada una devuelve un arreglo nuevo, sin tocar el original:
+
+```tsx
+setTareas([...tareas, nuevaTarea]); // añadir
+setTareas(tareas.map((t) => (t.id === id ? { ...t, hecha: !t.hecha } : t))); // alternar
+setTareas(tareas.filter((t) => t.id !== id)); // borrar
+```
+
+</Step>
+
+<Step n={4} title="Separa un componente por elemento">
+
+`ItemTarea` recibe la tarea y dos funciones por props (`onAlternar` y `onBorrar`). Así `App` guarda el estado y el hijo solo avisa de lo que el usuario hizo.
+
+</Step>
+
+<Step n={5} title="Añade el renderizado condicional">
+
+Si no hay tareas, muestra un mensaje amable en lugar de una lista vacía. Con un ternario: tareas vacías, mensaje; si no, la lista.
+
+</Step>
+
+## Pruébalo en vivo
+
+Este es el proyecto completo. Añade tareas, márcalas, bórralas y mira el contador de pendientes. Después lee el código e identifica dónde se usa cada concepto de la semana.
+
+<Playground file="dia-07/ListaTareas.tsx" title="Mini proyecto: lista de tareas" />
+
+## Error típico
+
+<Warning title="Mutar el arreglo del estado">
+
+Escribir `tareas.push(nueva)` cambia el arreglo original y React puede no enterarse del cambio. Crea siempre uno nuevo: `setTareas([...tareas, nueva])`.
+
+</Warning>
+
+<Warning title="Usar el índice como key en listas que cambian">
+
+En una lista donde se borran elementos, la `key` debe ser el `id` de la tarea. Con el índice, al borrar una fila los estados internos (como el checkbox marcado) se pueden mezclar entre filas.
+
+</Warning>
+
+<Tip title="Ideas para seguir">
+
+Cuando termines, prueba a añadir un filtro (todas, pendientes, hechas) o a guardar las tareas en `localStorage`. Esto último lo veremos más adelante con efectos.
+
+</Tip>
+
+## Ejercicio
+
+Añade una función de limpieza a una lista de tareas sencilla.
+
+<Exercise criteria={["borrarCompletadas deja en el estado solo las tareas con hecha en false","El botón solo se muestra cuando hay tareas completadas","El texto del botón incluye el número de completadas","No se muta el arreglo original: se usa filter y setTareas"]} />
+
+<Playground file="dia-07/Ejercicio.starter.tsx" title="Tu turno" />
+
+<Solution file="dia-07/Ejercicio.solution.tsx" />
+
+## Resumen
+
+- Un proyecto pequeño combina componentes, props, estado, eventos y renderizado condicional.
+- Empieza modelando los datos con tipos y decide qué vive en el estado.
+- El estado no se muta: añadir, actualizar y borrar crean un arreglo nuevo.
+- Los componentes hijos reciben datos y funciones por props, y el padre guarda el estado.

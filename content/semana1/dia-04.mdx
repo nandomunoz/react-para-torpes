@@ -1,0 +1,105 @@
+---
+title: useState, tu primer contador
+week: 1
+day: "4"
+order: 4
+objective: Usar useState con tipos de TypeScript para crear un contador que cambia al pulsar botones.
+minutes: 30
+level: básico
+reading:
+  - title: El estado, la memoria de un componente
+    url: https://react.dev/learn/state-a-components-memory
+  - title: Referencia de useState
+    url: https://react.dev/reference/react/useState
+  - title: Responder a eventos
+    url: https://react.dev/learn/responding-to-events
+---
+
+## Concepto
+
+Una variable normal dentro de un componente no sirve para recordar cosas: cada vez que React vuelve a dibujar el componente, la función se ejecuta de nuevo y todo empieza desde cero. Es como un pez con memoria de tres segundos.
+
+El estado es la solución. Con el hook `useState` le das a tu componente una memoria que sobrevive entre dibujados, y además le avisas a React de que algo cambió para que vuelva a pintar la pantalla.
+
+`useState` te devuelve un par: el valor actual y una función para cambiarlo. Con TypeScript indicas el tipo entre ángulos al llamarlo, por ejemplo `useState<number>(0)`. Nunca modifiques el valor directamente: siempre usa la función que te da el hook.
+
+## Paso a paso
+
+<Step n={1} title="Importa el hook">
+
+Los hooks se importan desde `react` y siempre se llaman en el cuerpo del componente, nunca dentro de condiciones ni bucles:
+
+```tsx
+import { useState } from "react";
+```
+
+</Step>
+
+<Step n={2} title="Declara el estado con su tipo">
+
+Usa desestructuración de arreglos para quedarte con el valor y su función de cambio. El número entre paréntesis es el valor inicial:
+
+```tsx
+const [cuenta, setCuenta] = useState<number>(0);
+```
+
+</Step>
+
+<Step n={3} title="Muestra el estado en el JSX">
+
+Lo pintas con llaves como cualquier otra variable: `Cuenta: {cuenta}` dentro de un `h1`.
+
+</Step>
+
+<Step n={4} title="Cambia el estado desde un evento">
+
+Pasa una función al `onClick` del botón. Esa función llama a `setCuenta` con el nuevo valor y React vuelve a dibujar:
+
+```tsx
+<button onClick={() => setCuenta(cuenta + 1)}>Sumar</button>
+```
+
+</Step>
+
+## Pruébalo en vivo
+
+Pulsa los botones y mira cómo cambia la pantalla. Después intenta añadir un botón que sume 10.
+
+<Playground file="dia-04/Contador.tsx" title="Contador con useState" />
+
+## Error típico
+
+<Warning title="Modificar el estado directamente">
+
+Escribir `cuenta = cuenta + 1` o `cuenta++` no avisa a React, y la pantalla no se actualiza. Siempre usa la función que te da el hook: `setCuenta(cuenta + 1)`.
+
+</Warning>
+
+<Warning title="Ejecutar la función en vez de pasarla">
+
+Si escribes `onClick={setCuenta(cuenta + 1)}`, la función se ejecuta al dibujar y entras en un bucle infinito. Pasa una función que la llame: `onClick={() => setCuenta(cuenta + 1)}`.
+
+</Warning>
+
+<Tip title="Legado">
+
+Antes el estado se guardaba en componentes de clase con `this.setState`. Hoy no hace falta aprenderlo: los componentes de función con hooks son el estándar.
+
+</Tip>
+
+## Ejercicio
+
+Mejora el contador con tres botones.
+
+<Exercise criteria={["Creas el estado cuenta con useState tipado como number y valor inicial 0","El botón Sumar aumenta la cuenta en 1","El botón Restar disminuye en 1 y está deshabilitado cuando la cuenta es 0","El botón Reiniciar vuelve la cuenta a 0"]} />
+
+<Playground file="dia-04/Ejercicio.starter.tsx" title="Tu turno" />
+
+<Solution file="dia-04/Ejercicio.solution.tsx" />
+
+## Resumen
+
+- El estado es la memoria del componente: sobrevive entre dibujados.
+- `useState` devuelve el valor actual y una función para cambiarlo.
+- Se tipa con `useState<number>(0)` y nunca se modifica directamente.
+- Los eventos como `onClick` reciben una función, no el resultado de ejecutarla.

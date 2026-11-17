@@ -1,0 +1,119 @@
+---
+title: JSX y tu primer componente
+week: 1
+day: "2"
+order: 2
+objective: Escribir un componente funcional con JSX y TypeScript y renderizarlo en el navegador.
+minutes: 30
+level: básico
+reading:
+  - title: Tu primer componente
+    url: https://react.dev/learn/your-first-component
+  - title: Escribir marcado con JSX
+    url: https://react.dev/learn/writing-markup-with-jsx
+  - title: JavaScript en JSX con llaves
+    url: https://react.dev/learn/javascript-in-jsx-with-curly-braces
+---
+
+## Concepto
+
+Un componente de React es, ni más ni menos, una función que devuelve lo que quieres ver en pantalla. Es como una receta: le das ingredientes (luego los llamaremos props) y te devuelve un plato listo para servir.
+
+Lo que devuelve esa función se escribe en JSX, una sintaxis que parece HTML pero vive dentro de TypeScript. No es HTML de verdad: por ejemplo, en vez de `class` escribes `className`, y todas las etiquetas deben cerrarse, incluso `<img />`.
+
+La magia está en las llaves. Con `{nombre}` metes cualquier expresión de TypeScript dentro del marcado: una variable, una suma, una llamada a función. Y una regla de oro: un componente siempre empieza con mayúscula, así React sabe que es un componente y no una etiqueta HTML.
+
+## Paso a paso
+
+<Step n={1} title="Crea una función con mayúscula">
+
+El nombre del componente va en `PascalCase` y la función devuelve JSX:
+
+```tsx
+function Bienvenida() {
+  return <h1>¡Hola!</h1>;
+}
+```
+
+</Step>
+
+<Step n={2} title="Tipa las props">
+
+Define un tipo para lo que recibe el componente. Aquí `nombre` es obligatorio y `emoji` es opcional (el signo `?`):
+
+```tsx
+type BienvenidaProps = {
+  nombre: string;
+  emoji?: string;
+};
+```
+
+</Step>
+
+<Step n={3} title="Usa llaves para insertar valores">
+
+Desestructura las props en los parámetros y muéstralas con llaves. Un valor por defecto cubre el caso en que no llegue el emoji:
+
+```tsx
+function Bienvenida({ nombre, emoji = "👋" }: BienvenidaProps) {
+  return <h1>¡Hola, {nombre}! {emoji}</h1>;
+}
+```
+
+</Step>
+
+<Step n={4} title="Devuelve un solo elemento raíz">
+
+Una función solo puede devolver un elemento. Si necesitas varios, envuélvelos en un `div` o en un fragmento `<>...</>`.
+
+</Step>
+
+<Step n={5} title="Úsalo como una etiqueta">
+
+Dentro de `App` escribes tu componente como si fuera HTML. Puedes reutilizarlo tantas veces como quieras con datos distintos:
+
+```tsx
+<Bienvenida nombre="torpe" />
+<Bienvenida nombre="futuro experto" emoji="🚀" />
+```
+
+</Step>
+
+## Pruébalo en vivo
+
+Cambia los nombres, quita el emoji o añade un tercer saludo. Fíjate en cómo el mismo componente genera resultados distintos.
+
+<Playground file="dia-02/Bienvenida.tsx" title="Componente Bienvenida" />
+
+## Error típico
+
+<Warning title="Escribir el componente con minúscula">
+
+Si llamas a tu función `bienvenida` y la usas como `<bienvenida />`, React la trata como una etiqueta HTML inventada y no pinta nada útil. Pon siempre la primera letra en mayúscula.
+
+Otro clásico: devolver dos elementos hermanos sin envolverlos. Si ves el error "JSX expressions must have one parent element", envuélvelos en un `div` o en un fragmento.
+
+</Warning>
+
+<Tip title="Llaves, no comillas">
+
+Para un texto fijo usa comillas: `nombre="torpe"`. Para un valor de TypeScript usa llaves: `edad={30}`. Y no olvides que en JSX es `className`, no `class`.
+
+</Tip>
+
+## Ejercicio
+
+Crea un componente `TarjetaPerfil` reutilizable.
+
+<Exercise criteria={["Defines un tipo TarjetaPerfilProps con nombre y profesion de tipo string","TarjetaPerfil desestructura las props y las muestra con llaves","El nombre aparece en un h2 y la profesión en un párrafo con clase muted","App renderiza dos TarjetaPerfil con datos distintos"]} />
+
+<Playground file="dia-02/Ejercicio.starter.tsx" title="Tu turno" />
+
+<Solution file="dia-02/Ejercicio.solution.tsx" />
+
+## Resumen
+
+- Un componente es una función con nombre en mayúscula que devuelve JSX.
+- JSX parece HTML pero usa `className` y exige cerrar todas las etiquetas.
+- Las llaves insertan expresiones de TypeScript dentro del marcado.
+- Tipar las props con un `type` evita errores y documenta tu componente.
