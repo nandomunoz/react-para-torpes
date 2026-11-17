@@ -1,0 +1,134 @@
+---
+title: Server Components vs Client Components
+week: 5
+day: "33"
+order: 29
+objective: Distinguir qué código corre en el servidor y cuál en el navegador, y usar "use client" solo donde hace falta.
+minutes: 45
+level: avanzado
+reading:
+  - title: Server y Client Components en Next.js
+    url: https://nextjs.org/docs/app/getting-started/server-and-client-components
+  - title: Documentación del App Router
+    url: https://nextjs.org/docs/app
+  - title: Pensar en React
+    url: https://react.dev/learn/thinking-in-react
+---
+
+## Concepto
+
+En el App Router de Next.js, **todos los componentes son Server Components por defecto**. Eso significa que se ejecutan en el servidor (o en el momento del build), y al navegador solo llega el HTML resultante. Es como un restaurante: la cocina (servidor) prepara el plato y te lo sirve ya listo; no te mandan los ingredientes y la sartén a casa.
+
+Esto tiene ventajas claras: menos JavaScript descargado, acceso directo a datos y a secretos del servidor, y mejor rendimiento. Pero hay un precio: un Server Component **no puede** usar `useState`, `useEffect`, ni manejar eventos como `onClick`, porque no existe un navegador donde reaccionar al usuario.
+
+Cuando necesitas interactividad, creas un **Client Component** poniendo la directiva `"use client"` en la primera línea del archivo. Ese componente (y lo que importe) se envía al navegador y se hidrata para ser interactivo. Piensa en ellos como islas de interactividad dentro de un mar de HTML estático.
+
+La regla práctica: empieza siempre en el servidor y baja a cliente solo las hojas del árbol que de verdad necesiten estado, efectos o eventos. Un botón de me gusta, sí; la página entera, no.
+
+## Paso a paso
+
+<Step n={1} title="Escribe un Server Component (el de por defecto)">
+
+No necesitas ninguna directiva. Puede ser `async` y pedir datos directamente:
+
+```tsx
+// app/page.tsx
+export default function Home() {
+  return (
+    <main>
+      <h1>Mi tienda</h1>
+      <p>Esto se renderiza en el servidor.</p>
+    </main>
+  );
+}
+```
+
+</Step>
+
+<Step n={2} title="Crea una isla con use client">
+
+```tsx
+// app/components/BotonMeGusta.tsx
+"use client";
+
+import { useState } from "react";
+
+export default function BotonMeGusta() {
+  const [likes, setLikes] = useState(0);
+  return (
+    <button type="button" onClick={() => setLikes((n) => n + 1)}>
+      Me gusta ({likes})
+    </button>
+  );
+}
+```
+
+La directiva `"use client"` va **arriba del todo**, antes de los imports.
+
+</Step>
+
+<Step n={3} title="Úsala desde el servidor">
+
+Un Server Component puede importar y renderizar un Client Component sin problema:
+
+```tsx
+// app/page.tsx
+import BotonMeGusta from "./components/BotonMeGusta";
+
+export default function Home() {
+  return (
+    <main>
+      <h1>Mi tienda</h1>
+      <BotonMeGusta />
+    </main>
+  );
+}
+```
+
+</Step>
+
+<Step n={4} title="Decide qué va dónde">
+
+Usa esta chuleta rápida:
+
+- **Servidor**: leer datos, mostrar contenido, layouts, páginas.
+- **Cliente**: `useState`, `useEffect`, `onClick`, `onChange`, APIs del navegador como `localStorage`.
+
+</Step>
+
+## Pruébalo en vivo
+
+Este editor no ejecuta Next.js, pero sí puede **simular la idea**: una parte sin estado que solo pinta datos (lo que sería el servidor) y una isla interactiva (lo que sería el cliente). Fíjate en que solo la isla usa `useState`.
+
+<Playground file="dia-33/Islas.tsx" title="Servidor + isla de cliente (simulación)" />
+
+<Warning title="Usar useState en un Server Component">
+
+Es el error número uno. Si escribes `useState` u `onClick` en un archivo sin `"use client"`, Next.js falla con un mensaje parecido a: *You're importing a component that needs useState. This React Hook only works in a Client Component.*
+
+Qué hacer: no marques toda la página como cliente por pereza. Extrae solo la parte interactiva a un componente nuevo con `"use client"` y deja el resto en el servidor. Así sigues enviando poco JavaScript.
+
+</Warning>
+
+<Tip title="Los hijos pueden seguir siendo de servidor">
+
+Si un Client Component recibe contenido por `children`, ese contenido puede ser un Server Component. Así puedes envolver partes del servidor con un componente de cliente (un menú desplegable, por ejemplo) sin convertirlas en cliente.
+
+</Tip>
+
+## Ejercicio
+
+<Exercise criteria={["Has separado la parte interactiva en un componente propio", "Cabecera no usa hooks ni eventos (sería un Server Component)", "El componente interactivo llevaría use client en la primera línea", "Sabes explicar por qué no marcaste toda la página como cliente"]} />
+
+Tienes una página con un título y un contador de visitas mezclados. Sepáralos en un componente de servidor y una isla de cliente.
+
+<Playground file="dia-33/Ejercicio.starter.tsx" title="Tu turno" />
+
+<Solution file="dia-33/Ejercicio.solution.tsx" />
+
+## Resumen
+
+- En el App Router todo es Server Component salvo que pongas `"use client"` arriba del archivo.
+- Los Server Components no pueden usar estado, efectos ni eventos.
+- Baja a cliente solo las hojas interactivas del árbol, nunca la página entera sin motivo.
+- Un Server Component puede renderizar Client Components, y un Client Component puede recibir Server Components como `children`.

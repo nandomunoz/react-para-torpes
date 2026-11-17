@@ -1,0 +1,185 @@
+---
+title: Build estático, despliegue y migración
+week: 5
+day: "35"
+order: 31
+objective: Exportar un sitio Next.js como estático, desplegarlo y planificar la migración del proyecto final de la semana 4 a Next.js.
+minutes: 50
+level: avanzado
+reading:
+  - title: Exportación estática en Next.js
+    url: https://nextjs.org/docs/app/guides/static-exports
+  - title: Documentación de Next.js
+    url: https://nextjs.org/docs
+  - title: Empezar un proyecto React nuevo
+    url: https://react.dev/learn/start-a-new-react-project
+---
+
+## Concepto
+
+Next.js puede funcionar de dos maneras. Con un **servidor Node.js** corriendo, que renderiza páginas bajo demanda. O como **sitio estático**: en el build genera todos los archivos HTML, CSS y JavaScript, y los subes a cualquier hosting barato, sin servidor. Es la diferencia entre un restaurante que cocina al momento y uno que deja los táperes ya preparados en la nevera.
+
+Para lo segundo activas `output: "export"` en `next.config.ts`. Al ejecutar `pnpm build`, Next.js crea una carpeta `out/` con tu web completa. Y aquí va el dato curioso prometido: **este sitio del curso está hecho exactamente así**, con Next.js y exportado como estático para publicarlo en GitHub Pages.
+
+Hay límites. En modo exportado no hay código de servidor en tiempo de ejecución: nada de rutas de API dinámicas ni de funciones que necesiten una petición real. Y las rutas dinámicas como `[slug]` necesitan una función `generateStaticParams` que le diga a Next.js qué páginas generar durante el build.
+
+Si prefieres un servidor real (datos que cambian a cada visita, login, etc.), Vercel despliega Next.js sin configuración. Para un blog o una web de contenido, lo estático es más simple, rápido y gratuito.
+
+## Paso a paso
+
+<Step n={1} title="Activa la exportación estática">
+
+```ts
+// next.config.ts
+import type { NextConfig } from "next";
+
+const config: NextConfig = {
+  output: "export",
+  trailingSlash: true,
+  images: { unoptimized: true },
+};
+
+export default config;
+```
+
+`images.unoptimized` hace falta porque la optimización de imágenes necesita servidor.
+
+</Step>
+
+<Step n={2} title="Genera las rutas dinámicas con generateStaticParams">
+
+```tsx
+// app/blog/[slug]/page.tsx
+const slugs: string[] = ["hola-mundo", "mi-primer-post"];
+
+export function generateStaticParams() {
+  return slugs.map((slug) => ({ slug }));
+}
+
+type Props = { params: Promise<{ slug: string }> };
+
+export default async function Articulo({ params }: Props) {
+  const { slug } = await params;
+  return <h1>Artículo: {slug}</h1>;
+}
+```
+
+</Step>
+
+<Step n={3} title="Construye y prueba la carpeta out">
+
+```bash
+pnpm build
+pnpm dlx serve out
+```
+
+Abre la dirección que te indique y navega por todas las rutas.
+
+</Step>
+
+<Step n={4} title="Despliega">
+
+Con **Vercel**: sube tu repositorio a GitHub, impórtalo desde el panel de Vercel y listo; detecta Next.js solo.
+
+Con **GitHub Pages**: si tu web vive en `usuario.github.io/mi-repo`, necesitas un `basePath`:
+
+```ts
+// next.config.ts
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
+const config = {
+  output: "export",
+  basePath,
+  trailingSlash: true,
+  images: { unoptimized: true },
+};
+```
+
+Luego publicas el contenido de `out/` con un workflow de GitHub Actions o con la opción de Pages de tu repositorio.
+
+</Step>
+
+## Pruébalo en vivo
+
+Comprueba tu build estático desde la terminal:
+
+```bash
+pnpm build
+ls out
+```
+
+Deberías ver `index.html` y una carpeta por cada ruta (`blog/`, `acerca/`...). Cada una contiene su propio `index.html`, gracias a `trailingSlash: true`. Esa carpeta es tu web: puedes copiarla a cualquier hosting.
+
+## Migrar el proyecto final de la semana 4
+
+Tu proyecto CRUD con React Router, Redux y llamadas a API se puede llevar a Next.js por fases. Este es un plan realista:
+
+1. Crea un proyecto nuevo con `pnpm create next-app@latest` y copia tus componentes a `app/components/`.
+2. Convierte cada ruta de React Router en una carpeta de `app/` con su `page.tsx`.
+3. Sustituye los enlaces `Link` de React Router por `Link` de `next/link`.
+4. Mueve la carga de datos a Server Components `async` donde puedas.
+5. Añade `"use client"` a los componentes con estado, efectos o eventos, y al Provider de Redux.
+6. Añade `metadata` a cada página y comprueba con `pnpm build`.
+
+<Warning title="Rutas dinámicas sin generateStaticParams">
+
+Si exportas como estático y tienes una ruta como `app/blog/[slug]/page.tsx` sin `generateStaticParams`, el build falla indicando que falta esa función. Tiene que devolver la lista de todos los valores posibles. Si tus datos vienen de una API, haz el `fetch` dentro de `generateStaticParams` para generar las páginas durante el build.
+
+También ojo en GitHub Pages: si olvidas el `basePath`, las rutas y los estilos devolverán 404 porque buscan en la raíz del dominio.
+
+</Warning>
+
+<Tip title="Redux y el App Router">
+
+Redux solo funciona en Client Components. Crea un componente `Providers.tsx` con `"use client"` que envuelva el Provider y úsalo dentro de `app/layout.tsx`. El layout sigue siendo de servidor; solo el Provider es de cliente.
+
+</Tip>
+
+## Ejercicio
+
+<Exercise criteria={["next.config.ts tiene output export y trailingSlash activados", "Las rutas dinámicas tienen generateStaticParams", "pnpm build termina sin errores y genera la carpeta out", "Has servido out en local y todas las rutas cargan", "Tienes un plan escrito con los pasos para migrar tu proyecto de la semana 4"]} />
+
+Convierte tu proyecto de prueba en un sitio estático y comprueba que `pnpm build` genera todas las páginas del blog.
+
+<Tip title="Solución">
+
+```ts
+// next.config.ts
+import type { NextConfig } from "next";
+
+const config: NextConfig = {
+  output: "export",
+  trailingSlash: true,
+  images: { unoptimized: true },
+};
+
+export default config;
+```
+
+```tsx
+// app/blog/[slug]/page.tsx
+const slugs: string[] = ["hola-mundo", "tipos-sin-llorar", "estado-y-cafe"];
+
+export function generateStaticParams() {
+  return slugs.map((slug) => ({ slug }));
+}
+
+export default async function Articulo({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  return <h1>Leyendo: {slug}</h1>;
+}
+```
+
+```bash
+pnpm build
+pnpm dlx serve out
+```
+
+</Tip>
+
+## Resumen
+
+- `output: "export"` convierte tu proyecto en un sitio estático dentro de la carpeta `out/`; así está hecho este curso.
+- Las rutas dinámicas necesitan `generateStaticParams` para generarse durante el build.
+- Puedes desplegar en Vercel sin configuración o en GitHub Pages usando `basePath`.
+- Migrar la semana 4 implica convertir rutas en carpetas y separar Server y Client Components.
