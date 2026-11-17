@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 400" width="1280" height="400" role="img" aria-labelledby="t d">
+  <title id="t">React para torpes</title>
+  <desc id="d">Curso gratuito de React 19 y TypeScript en 30 días, con la mascota torpe.</desc>
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#1d1d1d" stroke-width="1"/>
+    </pattern>
+    <radialGradient id="glow" cx="82%" cy="50%" r="45%">
+      <stop offset="0" stop-color="#c6f51c" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#c6f51c" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1280" height="400" fill="#0b0b0b"/>
+  <rect width="1280" height="400" fill="url(#grid)"/>
+  <rect width="1280" height="400" fill="url(#glow)"/>
+
+  <g font-family="'Arial Black','Helvetica Neue',Arial,sans-serif">
+    <text x="80" y="96" font-size="20" font-weight="700" letter-spacing="3" fill="#c6f51c" font-family="ui-monospace,Menlo,Consolas,monospace">CURSO GRATIS · EN ESPAÑOL</text>
+    <text x="80" y="188" font-size="78" font-weight="900" fill="#f4f4ef">React para</text>
+    <rect x="72" y="204" width="352" height="96" rx="6" fill="#ffe600"/>
+    <text x="84" y="282" font-size="78" font-weight="900" fill="#0b0b0b">torpes</text>
+  </g>
+  <text x="80" y="340" font-size="26" fill="#bdbdb6" font-family="'Helvetica Neue',Arial,sans-serif">De cero a tu primera app en 30 días · React 19 + TypeScript</text>
+
+  <g font-family="ui-monospace,Menlo,Consolas,monospace" font-size="16" font-weight="700">
+    <rect x="80" y="356" width="104" height="30" rx="6" fill="none" stroke="#2a2a2a"/><text x="132" y="377" text-anchor="middle" fill="#f4f4ef">React 19</text>
+    <rect x="196" y="356" width="124" height="30" rx="6" fill="none" stroke="#2a2a2a"/><text x="258" y="377" text-anchor="middle" fill="#f4f4ef">TypeScript</text>
+    <rect x="332" y="356" width="76" height="30" rx="6" fill="none" stroke="#2a2a2a"/><text x="370" y="377" text-anchor="middle" fill="#f4f4ef">Vite</text>
+    <rect x="420" y="356" width="104" height="30" rx="6" fill="none" stroke="#2a2a2a"/><text x="472" y="377" text-anchor="middle" fill="#f4f4ef">Next.js</text>
+  </g>
+
+  <!-- mascota -->
+  <g transform="translate(850 40) scale(2.6)">
+    <path d="M44 22c-6-10 4-16 10-10 2-8 14-8 14 0 6-6 16 2 8 10" fill="none" stroke="#c6f51c" stroke-width="6" stroke-linecap="round"/>
+    <rect x="14" y="20" width="92" height="88" rx="30" fill="#c6f51c" stroke="#0b0b0b" stroke-width="5"/>
+    <g transform="rotate(-14 84 34)">
+      <rect x="64" y="26" width="38" height="14" rx="4" fill="#f4f4ef" stroke="#0b0b0b" stroke-width="3"/>
+      <path d="M78 29v8M84 29v8M90 29v8" stroke="#0b0b0b" stroke-width="2"/>
+    </g>
+    <circle cx="43" cy="62" r="17" fill="#f4f4ef" stroke="#0b0b0b" stroke-width="5"/>
+    <circle cx="79" cy="66" r="17" fill="#f4f4ef" stroke="#0b0b0b" stroke-width="5"/>
+    <path d="M60 63l2 2" stroke="#0b0b0b" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="48" cy="64" r="5" fill="#0b0b0b"/><circle cx="74" cy="68" r="5" fill="#0b0b0b"/>
+    <path d="M44 93c6-6 10 4 16-1s10 3 16-2" fill="none" stroke="#0b0b0b" stroke-width="4" stroke-linecap="round"/>
+  </g>
+</svg>

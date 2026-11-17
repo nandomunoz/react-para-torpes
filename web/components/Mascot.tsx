@@ -9,7 +9,7 @@ export function Mascot({ className = "h-12 w-12", title }: { className?: string;
       aria-hidden={title ? undefined : true}
     >
       {/* pelo */}
-      <path d="M44 22c-6-10 4-16 10-10 2-8 14-8 14 0 6-6 16 2 8 10" fill="none" stroke="#0b0b0b" strokeWidth="5" strokeLinecap="round" />
+      <path d="M44 22c-6-10 4-16 10-10 2-8 14-8 14 0 6-6 16 2 8 10" fill="none" stroke="#c6f51c" strokeWidth="6" strokeLinecap="round" />
       {/* cabeza */}
       <rect x="14" y="20" width="92" height="88" rx="30" fill="#c6f51c" stroke="#0b0b0b" strokeWidth="5" />
       {/* tirita */}
