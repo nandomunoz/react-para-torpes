@@ -1,0 +1,105 @@
+---
+title: useCallback y React.memo
+week: 3
+day: "20"
+order: 19
+objective: Entender cuándo useCallback y memo evitan renders innecesarios y cuándo no sirven de nada, midiendo con un contador de renders.
+minutes: 40
+level: intermedio
+reading:
+  - title: memo en la referencia de React
+    url: https://react.dev/reference/react/memo
+  - title: useCallback en la referencia de React
+    url: https://react.dev/reference/react/useCallback
+  - title: useMemo en la referencia de React
+    url: https://react.dev/reference/react/useMemo
+---
+
+## Concepto
+
+Cuando un componente se renderiza, React renderiza también a todos sus hijos, aunque sus props sean idénticas. Casi siempre es instantáneo y no pasa nada. Pero si un hijo es caro de pintar, o tienes una lista larga, esos renders "por inercia" pueden notarse. Es como una oficina donde cada vez que el jefe cambia de silla, los diez empleados se levantan y vuelven a sentarse.
+
+`React.memo` envuelve un componente y le dice a React: "si las props son iguales a las del render anterior, sáltate este render". La comparación es **superficial**: números y textos se comparan por valor, pero objetos, arrays y **funciones** se comparan por referencia.
+
+Ahí entra el problema. Una función declarada dentro del componente es una función **nueva en cada render**, así que para `memo` las props siempre cambian y nunca se salta nada. `useCallback` recuerda una función entre renders mientras no cambien sus dependencias, manteniendo la misma referencia. Solo tiene sentido **junto con** `memo`: `useCallback` sin `memo` en el hijo no ahorra nada.
+
+La parte honesta: la mayoría de las veces no necesitas ninguno de los dos. Cada `memo` y cada `useCallback` añade código y comparaciones. Úsalos cuando midas un problema, no por costumbre. En el ejemplo de hoy cada fila tiene un contador de renders, así puedes verlo con tus propios ojos en lugar de creerme.
+
+## Paso a paso
+
+<Step n={1} title="Mide antes de optimizar">
+
+Usa un contador de renders (un efecto sin dependencias que incrementa una ref) y observa qué se renderiza al escribir en el padre. Sin medir, optimizas a ciegas.
+
+</Step>
+
+<Step n={2} title="Envuelve el hijo con memo">
+
+```tsx
+const Item = memo(function Item({ tarea, onAlternar }: ItemProps) {
+  // ...
+});
+```
+
+Por sí solo no basta si le pasas una función nueva en cada render.
+
+</Step>
+
+<Step n={3} title="Estabiliza la función con useCallback">
+
+```tsx
+const alternar = useCallback((id: number) => {
+  setTareas((actuales) => actuales.map((t) => (t.id === id ? { ...t, hecha: !t.hecha } : t)));
+}, []);
+```
+
+</Step>
+
+<Step n={4} title="Usa la forma funcional de setState">
+
+Fíjate en que la función usa `actuales`, no `tareas`. Así no depende del estado y el array de dependencias puede quedar vacío. Si la leyera directamente, tendrías que ponerla en las dependencias y la función cambiaría con cada tarea.
+
+</Step>
+
+<Step n={5} title="Vuelve a medir">
+
+Escribe en el input del padre: los hijos con `memo` y función estable no deben sumar renders. Si siguen sumando, alguna prop cambia de referencia (un objeto o array creado inline, por ejemplo).
+
+</Step>
+
+## Pruébalo en vivo
+
+Tres hijos con el mismo botón: uno normal, uno con `memo` pero con función inestable, y uno con `memo` y `useCallback`. Escribe en el input y compara los contadores. Solo el último se queda quieto (en desarrollo, el primer valor puede mostrar 2 por StrictMode).
+
+<Playground file="dia-20/Renders.tsx" title="Contador de renders" />
+
+<Tip title="React Compiler">
+
+Existe un compilador de React que aplica memoización automática en muchos casos. Aun así, entender `memo` y `useCallback` te ayuda a leer código existente y a saber por qué algo se renderiza.
+
+</Tip>
+
+## Error típico
+
+<Warning title="Poner useCallback o memo donde no aportan nada">
+
+Tres trampas comunes: usar `useCallback` en una función que se pasa a un hijo **sin** `memo` (no evita ningún render); poner `memo` a un componente cuyas props siempre cambian (objeto o array creado inline en cada render); y envolver componentes baratos, donde la comparación cuesta más que renderizar.
+
+Qué hacer: mide con un contador de renders o con las React DevTools, aplica `memo` solo a hijos caros o a elementos de listas largas, y asegúrate de que sus props sean estables.
+
+</Warning>
+
+## Ejercicio
+
+<Exercise criteria={["Item está envuelto con memo", "alternar usa useCallback con array de dependencias vacío", "alternar usa la forma funcional de setTareas, sin leer tareas directamente", "Al escribir en el input del padre, los contadores de los items no aumentan", "Al marcar una tarea, solo se vuelve a renderizar esa fila"]} />
+
+<Playground file="dia-20/Ejercicio.starter.tsx" title="Tu turno" />
+
+<Solution file="dia-20/Ejercicio.solution.tsx" />
+
+## Resumen
+
+- `memo` salta el render de un hijo si sus props no cambiaron (comparación superficial por referencia).
+- Las funciones, objetos y arrays creados dentro del componente cambian de referencia en cada render y rompen el `memo`.
+- `useCallback` mantiene la misma función entre renders y solo ayuda si el hijo está envuelto en `memo`.
+- Mide primero: en la mayoría de los componentes estas optimizaciones no hacen falta.

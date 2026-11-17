@@ -1,0 +1,106 @@
+---
+title: Hooks personalizados con TypeScript
+week: 3
+day: "16"
+order: 15
+objective: Extraer lógica repetida a hooks propios y tiparlos con genéricos, como useLocalStorage y useToggle.
+minutes: 40
+level: intermedio
+reading:
+  - title: Reutilizar lógica con hooks personalizados
+    url: https://react.dev/learn/reusing-logic-with-custom-hooks
+  - title: Genéricos en TypeScript
+    url: https://www.typescriptlang.org/docs/handbook/2/generics.html
+  - title: localStorage en MDN
+    url: https://developer.mozilla.org/es/docs/Web/API/Window/localStorage
+---
+
+## Concepto
+
+Imagina que cada vez que quieres un café tienes que moler el grano, calentar el agua y limpiar la cafetera. Al tercer día fabricas una cafetera automática. Un **hook personalizado** es eso: la cafetera de tu lógica. Si ves el mismo bloque de `useState` + `useEffect` copiado en tres componentes, es hora de sacarlo a una función.
+
+Un hook personalizado es simplemente una función cuyo nombre empieza por `use` y que llama a otros hooks dentro. No tiene magia ni API especial. Cada componente que lo usa obtiene **su propia copia del estado**: dos componentes con `useToggle` no comparten nada entre sí.
+
+Donde TypeScript brilla es en los **genéricos**. Un `useLocalStorage` debería servir para guardar un texto, un número o un objeto, y devolverte siempre el tipo correcto. Se escribe `useLocalStorage<T>`: quien lo llama decide `T`, y el estado que recibe ya viene tipado. Sin genéricos tendrías que usar `any` o escribir un hook por cada tipo.
+
+Hay una última decisión: qué devolver. Para dos valores (estado y función) una **tupla** imita a `useState` y deja que quien lo usa le ponga el nombre que quiera. Para tres o más cosas, un **objeto** es más legible porque se accede por nombre.
+
+## Paso a paso
+
+<Step n={1} title="Detecta la lógica repetida">
+
+Busca grupos de hooks que siempre van juntos: leer de `localStorage` al iniciar y escribir cuando cambia el valor, alternar un booleano, un contador con límites. Esos son candidatos.
+
+</Step>
+
+<Step n={2} title="Extrae la función con prefijo use">
+
+Muévela a una función `useAlgo` y devuelve lo que el componente necesita. El prefijo `use` no es decorativo: permite que el linter de hooks revise tu código.
+
+</Step>
+
+<Step n={3} title="Hazla genérica con T">
+
+Declara el parámetro de tipo y úsalo en el valor inicial y en el retorno. Para que devuelva la misma forma que `useState`, importa los tipos `Dispatch` y `SetStateAction`:
+
+```tsx
+function useLocalStorage<T>(clave: string, inicial: T): [T, Dispatch<SetStateAction<T>>] {
+  const [valor, setValor] = useState<T>(() => {
+    const guardado = window.localStorage.getItem(clave);
+    return guardado !== null ? (JSON.parse(guardado) as T) : inicial;
+  });
+  // ...efecto que guarda en localStorage
+  return [valor, setValor];
+}
+```
+
+</Step>
+
+<Step n={4} title="Protege lo que puede fallar">
+
+`localStorage` puede estar bloqueado y `JSON.parse` puede lanzar un error con datos corruptos. Envuelve ambos en `try/catch` y cae al valor inicial.
+
+</Step>
+
+<Step n={5} title="Úsalo con el tipo que necesites">
+
+TypeScript infiere `T` desde el valor inicial, o se lo das tú: `useLocalStorage<Preferencias>("prefs", { nombre: "", visitas: 0 })`.
+
+</Step>
+
+## Pruébalo en vivo
+
+Aquí conviven `useLocalStorage` (con un objeto como estado) y `useToggle`. Escribe tu nombre, recarga la vista previa y verás que sigue ahí.
+
+<Playground file="dia-16/Persistente.tsx" title="useLocalStorage y useToggle" />
+
+<Tip title="Estabiliza lo que devuelves">
+
+Si tu hook devuelve funciones, envuélvelas en `useCallback` (como en `useToggle`). Así quien lo use puede ponerlas en dependencias de efectos o pasarlas a componentes memoizados sin sorpresas. Lo verás con calma en el día 20.
+
+</Tip>
+
+## Error típico
+
+<Warning title="Llamar al hook de forma condicional o creer que comparte estado">
+
+Dos errores frecuentes. Primero: meter un hook dentro de un `if`, un bucle o después de un `return` temprano. React depende del orden de las llamadas, así que siempre se llaman en el nivel superior.
+
+Segundo: pensar que dos componentes con el mismo hook comparten el valor. Cada llamada crea estado nuevo. Si necesitas compartirlo, usa contexto (mañana) o sube el estado al padre.
+
+</Warning>
+
+## Ejercicio
+
+<Exercise criteria={["useContador recibe un valor inicial y un objeto de opciones tipado con min, max y paso opcionales", "Devuelve un objeto con valor, incrementar, decrementar y reiniciar", "incrementar nunca supera max y decrementar nunca baja de min", "Las funciones usan la forma funcional de setState", "No se usa any en ningún tipo"]} />
+
+<Playground file="dia-16/Ejercicio.starter.tsx" title="Tu turno" />
+
+<Solution file="dia-16/Ejercicio.solution.tsx" />
+
+## Resumen
+
+- Un hook personalizado es una función `useX` que llama a otros hooks; cada uso tiene su propio estado.
+- Los genéricos (`useLocalStorage<T>`) permiten reutilizar el hook con cualquier tipo sin perder seguridad.
+- Devuelve una tupla para dos valores y un objeto cuando hay más.
+- Protege con `try/catch` lo que depende del navegador y llama a los hooks siempre en el nivel superior.

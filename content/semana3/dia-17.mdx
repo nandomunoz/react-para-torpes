@@ -1,0 +1,113 @@
+---
+title: useContext y estado global tipado
+week: 3
+day: "17"
+order: 16
+objective: Crear un contexto tipado con su Provider y un hook useX que lanza un error claro si falta el Provider.
+minutes: 40
+level: intermedio
+reading:
+  - title: Pasar datos en profundidad con contexto
+    url: https://react.dev/learn/passing-data-deeply-with-context
+  - title: useContext en la referencia de React
+    url: https://react.dev/reference/react/useContext
+  - title: React con TypeScript
+    url: https://react.dev/learn/typescript
+---
+
+## Concepto
+
+Pasar una prop por cinco componentes que no la usan, solo para que llegue al sexto, se llama **prop drilling** y se parece a pasar una nota en clase: todos la tocan, nadie la quiere. El **contexto** es el altavoz del aula: alguien lo enciende arriba y cualquier componente de abajo puede escucharlo directamente.
+
+El flujo tiene tres piezas. Creas el contexto con `createContext`, un componente **Provider** que guarda el estado y lo ofrece a sus hijos, y consumidores que lo leen con `useContext`. Todo lo que cuelgue del Provider puede leer el valor, sin importar cuántos niveles haya en medio.
+
+El problema con TypeScript es el valor por defecto. Si no hay Provider, `useContext` devuelve lo que pusiste en `createContext`. Inventar un valor falso es mentir al compilador. La solución elegante: el contexto se crea con `null` y un **hook propio** (`useAcento`, `useSesion`...) comprueba que no sea `null`. Si lo es, lanza un error claro; si no, devuelve un valor ya sin `null`. Quien consume el hook ya no necesita comprobar nada.
+
+En el ejemplo de hoy el estado global es un **acento de color**: una paleta (lima, cielo, coral, violeta) que cualquier componente puede leer y cambiar. Fíjate en que los nombres válidos salen de las claves de la propia paleta con `keyof typeof`, así nunca se desincronizan.
+
+## Paso a paso
+
+<Step n={1} title="Define el tipo del valor del contexto">
+
+Piensa qué ofrece el contexto: datos y funciones para cambiarlos.
+
+```tsx
+type AcentoContextValue = {
+  nombre: NombreAcento;
+  color: string;
+  cambiar: (nombre: NombreAcento) => void;
+};
+```
+
+</Step>
+
+<Step n={2} title="Crea el contexto con null">
+
+```tsx
+const AcentoContext = createContext<AcentoContextValue | null>(null);
+```
+
+</Step>
+
+<Step n={3} title="Escribe el Provider">
+
+Un componente que guarda el estado y envuelve a `children` con `AcentoContext.Provider`. Si construyes el objeto `value` en cada render, memoízalo con `useMemo` para que los consumidores no se vuelvan a renderizar sin necesidad.
+
+</Step>
+
+<Step n={4} title="Escribe el hook useX que valida">
+
+```tsx
+function useAcento(): AcentoContextValue {
+  const ctx = useContext(AcentoContext);
+  if (ctx === null) {
+    throw new Error("useAcento debe usarse dentro de <AcentoProvider>");
+  }
+  return ctx;
+}
+```
+
+</Step>
+
+<Step n={5} title="Envuelve la app y consume el hook">
+
+Coloca el Provider lo más abajo posible (solo donde se necesita) y usa el hook en los componentes. Exporta el hook y el Provider, pero no el contexto en bruto.
+
+</Step>
+
+## Pruébalo en vivo
+
+Cambia el acento desde `Selector` y mira cómo `Tarjeta`, que no recibe ninguna prop, se actualiza sola.
+
+<Playground file="dia-17/Acento.tsx" title="Paleta de acento con contexto" />
+
+<Tip title="React 19 simplifica el Provider">
+
+En React 19 puedes escribir `<AcentoContext value={valor}>` directamente, sin `.Provider`. Aquí usamos `.Provider` porque funciona en todas las versiones.
+
+</Tip>
+
+## Error típico
+
+<Warning title="Usar el contexto fuera del Provider o abusar de él">
+
+Si olvidas envolver la app con el Provider, un contexto sin validar te da `null` y la app revienta lejos del origen del error. Con el hook `useX` que lanza un mensaje claro, el fallo se entiende al instante.
+
+Tampoco metas todo en un único contexto gigante: cada vez que cambia su valor, **todos** los consumidores se renderizan. Separa contextos por tema (acento, sesión, carrito) y reserva el contexto para datos que de verdad necesitan muchos componentes.
+
+</Warning>
+
+## Ejercicio
+
+<Exercise criteria={["El contexto se crea con createContext y null como valor por defecto", "El Provider guarda el usuario como string o null con useState", "useSesion lanza un Error si no hay Provider", "Cabecera y Login leen el contexto solo a través de useSesion", "No se usa any ni aserciones para esconder el null"]} />
+
+<Playground file="dia-17/Ejercicio.starter.tsx" title="Tu turno" />
+
+<Solution file="dia-17/Ejercicio.solution.tsx" />
+
+## Resumen
+
+- El contexto evita el prop drilling: un Provider arriba, consumidores con `useContext` abajo.
+- Crea el contexto con `null` y no inventes valores por defecto falsos.
+- Un hook `useX` que lanza error si falta el Provider te da un tipo limpio y errores claros.
+- Divide el estado global en varios contextos pequeños y memoiza el `value` del Provider.
