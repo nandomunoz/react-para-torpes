@@ -1,0 +1,108 @@
+---
+title: Elevación de estado entre hermanos
+week: 2
+day: "10"
+order: 10
+objective: Compartir estado entre componentes hermanos moviéndolo a su ancestro común y tipando las props que lo conectan.
+minutes: 35
+level: intermedio
+reading:
+  - title: Compartir estado entre componentes (react.dev)
+    url: https://react.dev/learn/sharing-state-between-components
+  - title: Elegir la estructura del estado (react.dev)
+    url: https://react.dev/learn/choosing-the-state-structure
+  - title: Pasar props a un componente (react.dev)
+    url: https://react.dev/learn/passing-props-to-a-component
+---
+
+## Concepto
+
+Imagina dos compañeros de piso que quieren saber cuántas pizzas quedan en la nevera. Si cada uno lleva su propia cuenta, tarde o temprano discuten. La solución es una sola libreta en la cocina que ambos consultan: **una fuente de verdad**.
+
+En React pasa lo mismo. Dos componentes hermanos no pueden hablar entre sí directamente: los datos solo bajan por props. Cuando ambos necesitan el mismo dato, lo **elevas**: mueves el estado al ancestro común más cercano y desde allí se lo pasas a los dos.
+
+El patrón tiene dos mitades. El dato baja como prop (`valor`), y para modificarlo el padre también baja una función (`onCambio`) que el hijo llama cuando el usuario hace algo. A esto se le llama flujo de datos unidireccional: los datos bajan, los eventos suben.
+
+Con TypeScript queda todo muy claro, porque el tipo de las props documenta el contrato: `valor: string` y `onCambio: (valor: string) => void`. Si el padre cambia la forma del dato, el compilador te señala todos los hijos que hay que ajustar.
+
+## Paso a paso
+
+<Step n={1} title="Detecta el estado duplicado">
+
+Si dos componentes necesitan mostrar o modificar el mismo valor, no deben tener cada uno su `useState`. Pregúntate: ¿cuál es el padre común más cercano?
+
+</Step>
+
+<Step n={2} title="Mueve el estado al padre">
+
+El padre declara el `useState` y se convierte en el dueño del dato. Los hijos pasan a ser componentes sin estado propio.
+
+```tsx
+const [texto, setTexto] = useState("");
+```
+
+</Step>
+
+<Step n={3} title="Tipa las props del hijo">
+
+Cada hijo recibe el valor y una función para pedir cambios. Escribe el tipo de forma explícita.
+
+```tsx
+type EntradaProps = {
+  valor: string;
+  onCambio: (valor: string) => void;
+};
+```
+
+</Step>
+
+<Step n={4} title="Deriva en lugar de duplicar">
+
+Si un valor se puede calcular a partir de otro, no lo guardes en estado. En el conversor, guardamos solo el último texto escrito y su escala; el otro campo se calcula en cada render.
+
+</Step>
+
+<Step n={5} title="Conecta los hermanos">
+
+El padre pasa `valor` y `onCambio` a cada hijo. Cuando uno llama a `onCambio`, el padre actualiza el estado, se vuelve a renderizar y ambos hermanos reciben el dato nuevo.
+
+</Step>
+
+## Pruébalo en vivo
+
+Escribe en Celsius y mira Fahrenheit, y al revés. Los dos inputs no se conocen: es el padre quien los sincroniza.
+
+<Playground file="dia-10/ConversorTemperatura.tsx" title="Conversor de temperatura" />
+
+## Error típico
+
+<Warning title="Copiar una prop a un estado local">
+
+Escribir `useState(props.valor)` en el hijo crea una copia que solo se lee en el primer render. Cuando el padre cambie el valor, el hijo seguirá mostrando el viejo y tendrás dos fuentes de verdad.
+
+**Qué hacer:** si el padre es el dueño del dato, el hijo debe usar directamente la prop y avisar de los cambios con el callback.
+
+</Warning>
+
+<Warning title="Elevar demasiado">
+
+No todo el estado debe vivir en la raíz de la aplicación. Si un dato solo lo usa un componente, déjalo ahí.
+
+**Qué hacer:** sube el estado solo hasta el ancestro común más cercano de los componentes que lo necesitan, ni un nivel más.
+
+</Warning>
+
+## Ejercicio
+
+<Exercise criteria={["El texto vive en un único useState dentro de App", "Editor recibe texto y onCambio, y no tiene estado propio", "Contador muestra caracteres y palabras calculados a partir del texto", "VistaPrevia muestra el texto en mayúsculas o un aviso si está vacío", "Todas las props están tipadas sin any"]} />
+
+<Playground file="dia-10/Ejercicio.starter.tsx" title="Tu turno" />
+
+<Solution file="dia-10/Ejercicio.solution.tsx" />
+
+## Resumen
+
+- Dos hermanos que comparten dato necesitan que el estado viva en su ancestro común.
+- Los datos bajan por props y los cambios suben por callbacks tipados.
+- Guarda el mínimo estado posible y deriva el resto en cada render.
+- Eleva solo lo necesario: cuanto más cerca de quien lo usa, mejor.

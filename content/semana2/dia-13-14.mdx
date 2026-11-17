@@ -1,0 +1,131 @@
+---
+title: "Proyecto: lista de tareas con persistencia"
+week: 2
+day: "13-14"
+order: 13
+objective: Integrar listas, formularios, elevación de estado y composición en una lista de tareas con filtros, contador y persistencia en localStorage.
+minutes: 120
+level: intermedio
+reading:
+  - title: localStorage en MDN
+    url: https://developer.mozilla.org/es/docs/Web/API/Window/localStorage
+  - title: Pensando en React (react.dev)
+    url: https://react.dev/learn/thinking-in-react
+  - title: Referencia de useState (react.dev)
+    url: https://react.dev/reference/react/useState
+  - title: Sincronizar con efectos (react.dev)
+    url: https://react.dev/learn/synchronizing-with-effects
+---
+
+## Concepto
+
+Dos días para juntar todo lo de la semana en una sola aplicación: una **lista de tareas** con formulario para añadir, filtros (todas, pendientes, hechas), un contador de pendientes y datos que sobreviven a recargar la página. Es el "hola mundo" de las apps reales, y por eso mismo es el mejor campo de entrenamiento.
+
+Aplicaremos el método del día 12. Los componentes serán `FormularioTarea`, `Filtros`, `ListaTareas` e `ItemTarea`, todos en un único archivo para que lo copies y lo pruebes sin montar carpetas. El estado (`tareas` y `filtro`) vive en `App`, su ancestro común, y baja por props.
+
+Para la persistencia usamos `localStorage`, que guarda pares de texto en el navegador. Tiene dos trampas: puede lanzar errores (modo privado, almacenamiento lleno o desactivado) y el JSON guardado puede estar corrupto. Por eso cada lectura y escritura va envuelta en `try/catch`.
+
+Para leer los datos una sola vez, usamos un **inicializador perezoso**: en lugar de `useState(cargarTareas())`, que leería el almacenamiento en cada render, pasamos la función sin llamarla, `useState(cargarTareas)`, y React la ejecuta solo al montar.
+
+## Paso a paso
+
+<Step n={1} title="Modela los datos y las funciones de almacenamiento">
+
+Define `Tarea` y el tipo `Filtro` como unión de literales. Escribe `cargarTareas` y `guardarTareas` fuera de los componentes, con `try/catch`. Al leer, parsea a `unknown` y comprueba con `Array.isArray` antes de fiarte del contenido.
+
+```tsx
+type Filtro = "todas" | "pendientes" | "hechas";
+
+function cargarTareas(): Tarea[] {
+  try {
+    const crudo = localStorage.getItem(CLAVE);
+    if (!crudo) return [];
+    const datos: unknown = JSON.parse(crudo);
+    return Array.isArray(datos) ? (datos as Tarea[]) : [];
+  } catch {
+    return [];
+  }
+}
+```
+
+</Step>
+
+<Step n={2} title="Declara el estado en App">
+
+El estado inicial de las tareas viene del inicializador perezoso. El filtro empieza en `"todas"`.
+
+```tsx
+const [tareas, setTareas] = useState<Tarea[]>(cargarTareas);
+const [filtro, setFiltro] = useState<Filtro>("todas");
+```
+
+</Step>
+
+<Step n={3} title="Persiste con un efecto">
+
+Un `useEffect` con `[tareas]` como dependencia guarda la lista cada vez que cambia. Es idempotente, así que tolera la doble ejecución de StrictMode sin problemas.
+
+```tsx
+useEffect(() => {
+  guardarTareas(tareas);
+}, [tareas]);
+```
+
+</Step>
+
+<Step n={4} title="Deriva pendientes y tareas visibles">
+
+No guardes el contador ni la lista filtrada: se calculan con `filter` en cada render a partir de `tareas` y `filtro`.
+
+</Step>
+
+<Step n={5} title="Escribe las funciones de cambio con actualizaciones funcionales">
+
+`agregar`, `alternar` y `borrar` usan `setTareas((prev) => ...)` para trabajar siempre sobre el valor más reciente y sin mutar el array. Se pasan a los hijos como callbacks.
+
+</Step>
+
+## Pruébalo en vivo
+
+Añade tareas, márcalas, cambia de filtro y recarga la vista previa. Si el entorno permite `localStorage`, tus tareas seguirán ahí. Si no, la app sigue funcionando gracias al `try/catch`.
+
+<Playground file="dia-13/ProyectoTareas.tsx" title="Lista de tareas completa" />
+
+## Error típico
+
+<Warning title="Leer localStorage en cada render">
+
+Escribir `useState(cargarTareas())` ejecuta la lectura y el `JSON.parse` en todos los renders, aunque React solo use el resultado del primero. Además, en servidores como Next.js `localStorage` ni existe.
+
+**Qué hacer:** pasa la función sin llamarla, `useState(cargarTareas)`. Para código que corre en el servidor, lee el almacenamiento dentro de un efecto.
+
+</Warning>
+
+<Warning title="Fiarte del JSON guardado">
+
+Un `JSON.parse` puede lanzar una excepción si el texto está roto, y aunque funcione no hay garantía de que tenga la forma de `Tarea[]`. Un usuario curioso (o una versión antigua de tu app) puede haber dejado cualquier cosa.
+
+**Qué hacer:** envuelve la lectura en `try/catch`, parsea a `unknown` y valida lo mínimo antes de usarlo.
+
+</Warning>
+
+<Tip title="Mejoras para el segundo día">
+
+Cuando tengas la base funcionando, prueba a añadir: editar el texto de una tarea, un botón para borrar todas las completadas, prioridades con colores, o extraer la lógica de almacenamiento a un hook propio. Esto último lo veremos más adelante en el curso.
+
+</Tip>
+
+## Ejercicio
+
+<Exercise criteria={["cargarNotas lee localStorage dentro de try/catch y devuelve un array vacío si falla", "El estado se inicializa con cargarNotas pasada sin llamar (inicializador perezoso)", "Un useEffect guarda las notas en localStorage con try/catch cada vez que cambian", "Al recargar la vista previa las notas siguen apareciendo", "Los tipos están definidos sin any"]} />
+
+<Playground file="dia-13/Ejercicio.starter.tsx" title="Tu turno" />
+
+<Solution file="dia-13/Ejercicio.solution.tsx" />
+
+## Resumen
+
+- Un proyecto pequeño integra todo: estado elevado, listas con key, formularios controlados y componentes con una sola responsabilidad.
+- Los datos derivados (contador, lista filtrada) se calculan, no se guardan.
+- `localStorage` siempre con `try/catch` y validando lo leído, nunca confiando en el JSON.
+- El inicializador perezoso (`useState(funcion)`) evita trabajo repetido en cada render.

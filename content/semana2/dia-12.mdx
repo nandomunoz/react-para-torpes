@@ -1,0 +1,113 @@
+---
+title: Pensando en React
+week: 2
+day: "12"
+order: 12
+objective: Convertir un mockup en componentes siguiendo los cinco pasos de Pensando en React y construir una tabla de productos filtrable.
+minutes: 50
+level: intermedio
+reading:
+  - title: Pensando en React (react.dev)
+    url: https://react.dev/learn/thinking-in-react
+  - title: Elegir la estructura del estado (react.dev)
+    url: https://react.dev/learn/choosing-the-state-structure
+  - title: Compartir estado entre componentes (react.dev)
+    url: https://react.dev/learn/sharing-state-between-components
+---
+
+## Concepto
+
+Cuando te enfrentas a una aplicación nueva, la tentación es abrir el editor y empezar a escribir JSX a lo loco. Resultado: un componente de 600 líneas llamado `App` que nadie se atreve a tocar. La alternativa es parar cinco minutos y pensar, igual que un arquitecto dibuja planos antes de levantar paredes.
+
+La guía oficial **Pensando en React** propone un método de cinco pasos que vale para cualquier interfaz. Partes de un mockup (un dibujo o diseño) y vas de lo visual a lo funcional, sin saltarte etapas.
+
+Hoy lo aplicamos a un clásico: una tabla de productos con una caja de búsqueda y una casilla "solo con stock". El diseño ya está en tu cabeza; nuestro trabajo es dividirlo en piezas, decidir dónde vive cada dato y conectarlo.
+
+Lo más importante: el estado debe ser **mínimo**. Los datos que puedes calcular a partir de otros (como la lista filtrada) no se guardan, se derivan en cada render.
+
+## Paso a paso
+
+<Step n={1} title="Dibuja cajas alrededor del mockup">
+
+Cada caja es un posible componente. Una regla útil: un componente debería hacer una sola cosa. En la tienda tenemos la barra de búsqueda, la tabla, las filas de categoría y las filas de producto.
+
+</Step>
+
+<Step n={2} title="Construye una versión estática">
+
+Primero pinta la interfaz solo con props, sin estado ni eventos. Es mucho trabajo de teclear y poco de pensar, así que conviene separarlo del resto. Define el tipo de los datos y deja que fluyan hacia abajo.
+
+```tsx
+type Producto = {
+  id: number;
+  categoria: string;
+  nombre: string;
+  precio: number;
+  stock: boolean;
+};
+```
+
+</Step>
+
+<Step n={3} title="Encuentra el estado mínimo">
+
+Pregúntate por cada dato: ¿cambia con el tiempo? ¿Se puede calcular desde otro? Aquí solo hay dos datos de estado: el texto de búsqueda y el valor de la casilla. La lista de productos es fija y la lista filtrada es derivada.
+
+</Step>
+
+<Step n={4} title="Decide dónde vive el estado">
+
+Mira qué componentes usan cada dato. La barra de búsqueda lo modifica y la tabla lo lee, así que su ancestro común (`App`) es el dueño. Es la elevación de estado del día anterior en acción.
+
+</Step>
+
+<Step n={5} title="Añade el flujo de datos inverso">
+
+La barra recibe `texto`, `soloStock` y callbacks como `onTexto`. Cuando el usuario escribe, llama al callback, `App` actualiza el estado y la tabla se vuelve a renderizar filtrada.
+
+</Step>
+
+## Pruébalo en vivo
+
+Escribe "ma" y marca "solo con stock". Observa cómo `TablaProductos` solo recibe props y calcula las filas; no guarda nada.
+
+<Playground file="dia-12/TablaProductos.tsx" title="Tabla de productos filtrable" />
+
+## Error típico
+
+<Warning title="Guardar la lista filtrada en estado">
+
+Si haces `useState` de los productos visibles y los actualizas con un efecto cada vez que cambia el filtro, tendrás dos fuentes de verdad que se desincronizan y un render de más.
+
+**Qué hacer:** guarda solo los filtros y calcula los productos visibles durante el renderizado. Si fuera costoso, ya hablaremos de memoización.
+
+</Warning>
+
+<Warning title="Componentes que hacen demasiado">
+
+Un `App` que contiene el input, la tabla y las filas dentro de un mismo bloque JSX funciona, pero es difícil de leer, probar y reutilizar.
+
+**Qué hacer:** extrae un componente cuando una parte tenga nombre propio en tu mockup o cuando se repita.
+
+</Warning>
+
+<Tip title="Empieza siempre por los datos">
+
+Si no tienes la API todavía, escribe el array de ejemplo con su tipo. Un buen modelo de datos suele dictar casi solo la estructura de componentes.
+
+</Tip>
+
+## Ejercicio
+
+<Exercise criteria={["Hay un componente FiltroContactos y otro ListaContactos con props tipadas", "El estado mínimo (texto y soloFavoritos) vive en App", "La lista filtrada se calcula en el render, sin guardarla en estado", "Se filtra por nombre sin distinguir mayúsculas y por favoritos", "Cuando no hay resultados se muestra un mensaje"]} />
+
+<Playground file="dia-12/Ejercicio.starter.tsx" title="Tu turno" />
+
+<Solution file="dia-12/Ejercicio.solution.tsx" />
+
+## Resumen
+
+- Pensar en React son cinco pasos: dividir en componentes, versión estática, estado mínimo, dueño del estado y flujo inverso.
+- Un buen componente hace una sola cosa y recibe todo lo que necesita por props tipadas.
+- Guarda el mínimo estado posible; lo calculable se deriva en el render.
+- Planificar cinco minutos antes de escribir JSX ahorra horas de refactorización.
