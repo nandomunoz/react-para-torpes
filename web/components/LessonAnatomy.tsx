@@ -95,7 +95,7 @@ export function LessonAnatomy() {
         ))}
       </ol>
       <div className="flex flex-col justify-between rounded-lg border border-line bg-ink p-5">
-        <div aria-live="polite">
+        <div key={i} aria-live="polite" className="animate-swap">
           <p className="mb-4 font-mono text-xs uppercase tracking-widest text-muted">Así se ve</p>
           {part.sample}
         </div>

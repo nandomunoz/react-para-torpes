@@ -43,7 +43,7 @@ export function ViteVsNext() {
           </button>
         ))}
       </div>
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+      <div key={tool} className="animate-swap mt-6 grid gap-6 lg:grid-cols-2">
         <div className="space-y-4">
           <pre className="overflow-x-auto rounded-lg border border-line bg-[#0d1117] p-4 font-mono text-sm text-lime">$ {d.command}</pre>
           <pre className="overflow-x-auto rounded-lg border border-line bg-[#0d1117] p-4 font-mono text-sm text-paper/80">{d.tree}</pre>

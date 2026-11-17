@@ -48,21 +48,23 @@ export default function Home() {
       <section className="relative overflow-hidden" aria-labelledby="titulo">
         <div className={`${container} grid items-center gap-12 py-16 lg:grid-cols-2 lg:py-24`}>
           <div>
-            <Mascot className="h-20 w-20" title="La mascota torpe" />
-            <p className={`${eyebrow} mt-6`}>Curso gratis · en español</p>
-            <h1 id="titulo" className="mt-3 font-display text-5xl leading-[1.05] sm:text-6xl">
-              React para <span className="bg-sun px-2 text-ink">torpes</span>
+            <Mascot className="animate-fade-up h-20 w-20" title="La mascota torpe" />
+            <p className={`${eyebrow} animate-fade-up mt-6 [animation-delay:80ms]`}>Curso gratis · en español</p>
+            <h1 id="titulo" className="animate-fade-up mt-3 font-display text-5xl leading-[1.05] [animation-delay:140ms] sm:text-6xl">
+              React para <span className="animate-wipe bg-no-repeat px-2 [background-image:linear-gradient(var(--color-sun),var(--color-sun))]">torpes</span>
             </h1>
-            <p className="mt-5 max-w-xl text-xl text-paper/80">
+            <p className="animate-fade-up mt-5 max-w-xl text-xl text-paper/80 [animation-delay:220ms]">
               De cero a tu primera app con React y TypeScript en 30 días. Un concepto por día, con editor en vivo.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="animate-fade-up mt-8 flex flex-wrap gap-3 [animation-delay:300ms]">
               <ContinueButton lessons={items} className={`${btnPrimary} text-lg`} />
               <Link href="/plan/" className={btnGhost}>Ver el plan</Link>
             </div>
             <p className="mt-4 text-sm text-muted">Sin registro · sin tarjeta · código abierto (MIT)</p>
           </div>
-          <PlaygroundClient code={HERO_CODE} css={cssBase} title="Tu primer componente" height={300} />
+          <div className="animate-fade-up [animation-delay:260ms]">
+            <PlaygroundClient code={HERO_CODE} css={cssBase} title="Tu primer componente" height={300} />
+          </div>
         </div>
       </section>
 
@@ -91,7 +93,7 @@ export default function Home() {
           <p className={eyebrow}>El plan</p>
           <h2 id="plan-titulo" className="mt-2 font-display text-4xl">Cinco libros, un estante</h2>
           <p className="mt-3 max-w-2xl text-paper/70">Elige una semana y entra directo a cualquier día.</p>
-          <div className="mt-10"><WeekShelf weeks={shelf} /></div>
+          <div className="reveal mt-10"><WeekShelf weeks={shelf} /></div>
         </div>
       </section>
 
@@ -101,7 +103,7 @@ export default function Home() {
           <p className={eyebrow}>Cómo es cada día</p>
           <h2 id="anatomia" className="mt-2 font-display text-4xl">Anatomía de una lección</h2>
           <p className="mt-3 max-w-2xl text-paper/70">Siempre el mismo formato, para que solo te preocupes de aprender.</p>
-          <div className="mt-10"><LessonAnatomy /></div>
+          <div className="reveal mt-10"><LessonAnatomy /></div>
         </div>
       </section>
 
@@ -111,7 +113,7 @@ export default function Home() {
           <p className={eyebrow}>Herramientas</p>
           <h2 id="vite-next" className="mt-2 font-display text-4xl">Vite o Next.js: ¿cuál uso?</h2>
           <p className="mt-3 max-w-2xl text-paper/70">Empiezas con Vite (semanas 1-4) y das el salto a Next.js en el bonus.</p>
-          <div className="mt-10"><ViteVsNext /></div>
+          <div className="reveal mt-10"><ViteVsNext /></div>
         </div>
       </section>
 
@@ -122,7 +124,7 @@ export default function Home() {
         <div className={`${container} max-w-3xl py-20`}>
           <p className={eyebrow}>Dudas</p>
           <h2 id="faq-titulo" className="mt-2 mb-8 font-display text-4xl">Preguntas frecuentes</h2>
-          <Faq />
+          <div className="reveal"><Faq /></div>
         </div>
       </section>
 

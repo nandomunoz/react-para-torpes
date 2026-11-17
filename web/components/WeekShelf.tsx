@@ -44,7 +44,7 @@ export function WeekShelf({ weeks }: { weeks: ShelfWeek[] }) {
         })}
       </div>
 
-      <div id="panel-semana" role="tabpanel" aria-labelledby={`tab-semana-${week.n}`} className="min-w-0">
+      <div key={week.n} id="panel-semana" role="tabpanel" aria-labelledby={`tab-semana-${week.n}`} className="animate-swap min-w-0">
         <p className="font-mono text-xs uppercase tracking-widest text-lime">Semana {week.n}</p>
         <h3 className="mt-1 font-display text-3xl">{week.title}</h3>
         <p className="mt-1 text-muted">{week.tagline}</p>
@@ -53,10 +53,10 @@ export function WeekShelf({ weeks }: { weeks: ShelfWeek[] }) {
             <li key={l.slug}>
               <Link
                 href={`/dia/${l.slug}/`}
-                className="flex items-center gap-4 px-4 py-3 transition hover:bg-panel focus-visible:outline-2 focus-visible:outline-lime"
+                className="group flex items-center gap-4 px-4 py-3 transition hover:bg-panel focus-visible:outline-2 focus-visible:outline-lime"
               >
                 <DoneMark slug={l.slug} />
-                <span className="w-16 shrink-0 font-mono text-sm text-sun">Día {l.day}</span>
+                <span className="w-16 shrink-0 font-mono text-sm text-sun transition-transform group-hover:translate-x-1">Día {l.day}</span>
                 <span className="min-w-0 flex-1 truncate text-paper">{l.title}</span>
                 <span className="shrink-0 font-mono text-xs text-muted">{l.minutes} min</span>
               </Link>

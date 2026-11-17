@@ -20,13 +20,13 @@ function Row({
   children: React.ReactNode;
 }) {
   return (
-    <div className="grid items-center gap-10 py-12 lg:grid-cols-2">
+    <div className="reveal grid items-center gap-10 py-12 lg:grid-cols-2">
       <div className={reverse ? "lg:order-2" : ""}>
         <p className={eyebrow}>{eyebrowText}</p>
         <h3 className="mt-2 font-display text-3xl">{title}</h3>
         <p className="mt-4 text-lg text-paper/80">{text}</p>
         <Link href={href} className={`${btnPrimary} mt-6`}>
-          {cta} →
+          {cta} <span aria-hidden className="transition-transform group-hover:translate-x-1">→</span>
         </Link>
       </div>
       <div className={reverse ? "lg:order-1" : ""}>{children}</div>

@@ -7,8 +7,8 @@ export const SITE = {
 };
 
 export const btnPrimary =
-  "inline-flex items-center justify-center gap-2 rounded-md bg-lime px-5 py-3 font-semibold text-ink transition hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime";
+  "group inline-flex items-center justify-center gap-2 rounded-md bg-lime px-5 py-3 font-semibold text-ink transition duration-200 hover:brightness-110 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime";
 export const btnGhost =
-  "inline-flex items-center justify-center gap-2 rounded-md border border-line px-5 py-3 font-semibold text-paper transition hover:border-lime hover:text-lime focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime";
+  "group inline-flex items-center justify-center gap-2 rounded-md border border-line px-5 py-3 font-semibold text-paper transition duration-200 hover:border-lime hover:text-lime active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime";
 export const eyebrow = "font-mono text-xs uppercase tracking-[0.2em] text-lime";
 export const container = "mx-auto w-full max-w-6xl px-4 sm:px-6";

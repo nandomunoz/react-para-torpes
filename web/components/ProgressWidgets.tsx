@@ -1,24 +1,53 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import { useProgress } from "@/lib/progress";
 import { btnGhost, btnPrimary } from "@/lib/site";
 
 type Item = { slug: string; day: string; title: string };
 
-/** Botón "Marcar día como hecho" al final de cada lección. */
+const SPARKS = Array.from({ length: 10 }, (_, i) => {
+  const angle = (i / 10) * Math.PI * 2;
+  return { x: Math.round(Math.cos(angle) * 54), y: Math.round(Math.sin(angle) * 40 - 8), c: i % 3 };
+});
+const SPARK_COLORS = ["bg-lime", "bg-sun", "bg-paper"];
+
+/** Botón "Marcar día como hecho" al final de cada lección (con un pequeño confeti al completar). */
 export function MarkDone({ slug }: { slug: string }) {
   const { progress, toggleDone } = useProgress();
+  const [burst, setBurst] = useState(0);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const done = progress.done.includes(slug);
+
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+
+  function onClick() {
+    if (!done) {
+      setBurst((b) => b + 1);
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = setTimeout(() => setBurst(0), 1000);
+    }
+    toggleDone(slug);
+  }
+
   return (
-    <button
-      type="button"
-      onClick={() => toggleDone(slug)}
-      aria-pressed={done}
-      className={done ? btnGhost : btnPrimary}
-    >
-      {done ? "✓ Día completado (deshacer)" : "Marcar día como hecho"}
-    </button>
+    <span className="relative inline-flex">
+      <button type="button" onClick={onClick} aria-pressed={done} className={done ? btnGhost : btnPrimary}>
+        {done ? "✓ Día completado (deshacer)" : "Marcar día como hecho"}
+      </button>
+      {burst > 0 && (
+        <span key={burst} aria-hidden className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          {SPARKS.map((p, i) => (
+            <span
+              key={i}
+              className={`animate-burst absolute h-2 w-2 rounded-sm ${SPARK_COLORS[p.c]}`}
+              style={{ "--x": `${p.x}px`, "--y": `${p.y}px` } as React.CSSProperties}
+            />
+          ))}
+        </span>
+      )}
+    </span>
   );
 }
 
@@ -37,7 +66,8 @@ export function ContinueButton({ lessons, className = btnPrimary }: { lessons: I
   }
   return (
     <Link href={`/dia/${next.slug}/`} className={className}>
-      {started ? `Continúa: Día ${next.day}` : "Empieza el Día 1"} →
+      {started ? `Continúa: Día ${next.day}` : "Empieza el Día 1"}{" "}
+      <span aria-hidden className="transition-transform group-hover:translate-x-1">→</span>
     </Link>
   );
 }

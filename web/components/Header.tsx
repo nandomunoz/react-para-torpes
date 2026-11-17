@@ -11,13 +11,13 @@ export function Header() {
           <span>{SITE.name}</span>
         </Link>
         <nav aria-label="Principal" className="flex items-center gap-1 sm:gap-3">
-          <Link href="/plan/" className="hidden px-3 py-2 text-sm text-paper/80 hover:text-lime sm:block">
+          <Link href="/plan/" className="hidden px-3 py-2 text-sm text-paper/80 transition-colors hover:text-lime sm:block">
             Plan
           </Link>
-          <Link href="/#faq" className="hidden px-3 py-2 text-sm text-paper/80 hover:text-lime sm:block">
+          <Link href="/#faq" className="hidden px-3 py-2 text-sm text-paper/80 transition-colors hover:text-lime sm:block">
             FAQ
           </Link>
-          <a href={SITE.repo} className="hidden px-3 py-2 text-sm text-paper/80 hover:text-lime sm:block" target="_blank" rel="noopener noreferrer">
+          <a href={SITE.repo} className="hidden px-3 py-2 text-sm text-paper/80 transition-colors hover:text-lime sm:block" target="_blank" rel="noopener noreferrer">
             GitHub
           </a>
           <Link href="/dia/dia-01/" className={`${btnPrimary} px-4 py-2 text-sm`}>
