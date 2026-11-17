@@ -1,0 +1,41 @@
+/* Estilos compartidos por los ejemplos (galería Vite y Sandpack del sitio). */
+:root {
+  color-scheme: dark;
+}
+body {
+  margin: 0;
+  padding: 16px;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: #0b0b0b;
+  color: #f4f4ef;
+}
+h1, h2, h3 { margin: 0 0 8px; }
+button {
+  font: inherit;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #c6f51c;
+  background: #c6f51c;
+  color: #0b0b0b;
+  font-weight: 600;
+}
+button:hover { filter: brightness(1.1); }
+button.secondary { background: transparent; color: #c6f51c; }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+input, select, textarea {
+  font: inherit;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #3a3a3a;
+  background: #141414;
+  color: inherit;
+}
+input:focus, select:focus, textarea:focus { outline: 2px solid #c6f51c; }
+label { display: block; margin: 8px 0 2px; font-size: 0.9rem; color: #9a9a94; }
+ul { padding-left: 20px; }
+.card { border: 1px solid #2a2a2a; border-radius: 8px; padding: 12px; background: #141414; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.error { color: #ff4d4d; font-size: 0.9rem; }
+.muted { color: #9a9a94; }
+a { color: #c6f51c; }
