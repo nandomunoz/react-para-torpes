@@ -1,0 +1,112 @@
+---
+title: Eventos y formularios tipados
+week: 1
+day: "5"
+order: 5
+objective: Manejar eventos de input y formulario con tipos de TypeScript y mostrar un alert con el texto escrito.
+minutes: 35
+level: básico
+reading:
+  - title: Responder a eventos
+    url: https://react.dev/learn/responding-to-events
+  - title: Reaccionar a la entrada con estado
+    url: https://react.dev/learn/reacting-to-input-with-state
+  - title: TypeScript con React
+    url: https://react.dev/learn/typescript
+---
+
+## Concepto
+
+Los eventos son lo que el usuario hace: pulsar, escribir, enviar un formulario. En React los escuchas con props como `onClick`, `onChange` o `onSubmit`, y les pasas una función que se ejecutará cuando ocurra.
+
+Para un formulario, la técnica habitual es el input controlado: el valor del campo vive en el estado de React y cada pulsación lo actualiza. Así tu componente siempre sabe qué hay escrito, como un camarero que apunta cada cosa en la libreta en lugar de fiarse de la memoria.
+
+TypeScript te ayuda tipando el evento. Para un campo de texto es `ChangeEvent<HTMLInputElement>` y para el formulario `FormEvent<HTMLFormElement>`. Gracias a eso, `e.target.value` tiene tipo `string` y el autocompletado te lo sabe todo.
+
+## Paso a paso
+
+<Step n={1} title="Guarda el texto en el estado">
+
+Un campo controlado necesita un estado de tipo texto:
+
+```tsx
+const [texto, setTexto] = useState<string>("");
+```
+
+</Step>
+
+<Step n={2} title="Escucha el cambio del input">
+
+La función recibe un `ChangeEvent` y copia lo escrito al estado. Importa los tipos con `import type`:
+
+```tsx
+import type { ChangeEvent, FormEvent } from "react";
+
+function manejarCambio(e: ChangeEvent<HTMLInputElement>) {
+  setTexto(e.target.value);
+}
+```
+
+</Step>
+
+<Step n={3} title="Conecta input y estado">
+
+El input recibe el valor del estado y la función de cambio. Con ambos, React controla el campo: `value={texto}` y `onChange={manejarCambio}`.
+
+</Step>
+
+<Step n={4} title="Maneja el envío">
+
+Con `onSubmit` en el formulario, llamas a `e.preventDefault()` para que el navegador no recargue la página y después lanzas el `alert`:
+
+```tsx
+function manejarEnvio(e: FormEvent<HTMLFormElement>) {
+  e.preventDefault();
+  alert(`Escribiste: ${texto}`);
+}
+```
+
+</Step>
+
+## Pruébalo en vivo
+
+Escribe algo y pulsa Enviar. Recuerda que el `alert` puede quedar bloqueado en algunos entornos embebidos; si no lo ves, prueba el ejemplo en tu propio proyecto.
+
+<Playground file="dia-05/FormularioAlerta.tsx" title="Formulario que muestra un alert" />
+
+## Error típico
+
+<Warning title="Olvidar preventDefault">
+
+Si no llamas a `e.preventDefault()`, el formulario recarga la página al enviarse y pierdes todo el estado. Es la primera línea de cualquier manejador de `onSubmit`.
+
+</Warning>
+
+<Warning title="Poner value sin onChange">
+
+Un input con `value` pero sin `onChange` queda congelado: no puedes escribir en él. Si controlas el valor, tienes que controlar también el cambio.
+
+</Warning>
+
+<Tip title="Atajo para descubrir el tipo del evento">
+
+Si dudas del tipo, escribe el manejador en línea (`onChange={(e) => ...}`) y pasa el ratón sobre `e` en tu editor: TypeScript te muestra el tipo exacto.
+
+</Tip>
+
+## Ejercicio
+
+Valida que el formulario no se envíe vacío.
+
+<Exercise criteria={["El input es controlado: su value viene del estado y onChange lo actualiza","manejarEnvio llama a preventDefault","Si el nombre está vacío o solo tiene espacios, se muestra un mensaje de error con clase error","Si el nombre es válido se limpia el error y se muestra un alert con el saludo"]} />
+
+<Playground file="dia-05/Ejercicio.starter.tsx" title="Tu turno" />
+
+<Solution file="dia-05/Ejercicio.solution.tsx" />
+
+## Resumen
+
+- Los eventos se escuchan con props como `onClick`, `onChange` y `onSubmit`.
+- Un input controlado guarda su valor en el estado de React.
+- Se tipan con `ChangeEvent` para inputs y `FormEvent` para formularios.
+- `e.preventDefault()` evita que el formulario recargue la página.

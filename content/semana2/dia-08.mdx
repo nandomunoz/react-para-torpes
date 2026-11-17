@@ -1,0 +1,121 @@
+---
+title: Listas, keys y TypeScript
+week: 2
+day: "8"
+order: 8
+objective: Renderizar listas de datos tipadas con map y entender por qué cada elemento necesita una key estable.
+minutes: 40
+level: básico
+reading:
+  - title: Renderizar listas (react.dev)
+    url: https://react.dev/learn/rendering-lists
+  - title: TypeScript en React (react.dev)
+    url: https://react.dev/learn/typescript
+  - title: Compartir estado entre componentes (react.dev)
+    url: https://react.dev/learn/sharing-state-between-components
+---
+
+## Concepto
+
+Casi toda aplicación real muestra listas: tareas, productos, mensajes, canciones que juras que no escuchas. En React no hay un bucle mágico para eso: tienes un array de datos y lo transformas en un array de elementos con `map`. React sabe pintar arrays de JSX sin problema.
+
+Piensa en una fila de sillas numeradas en un cine. Si alguien se levanta, tú no quieres que el acomodador reasigne todos los asientos: quieres que cada persona conserve su silla. Las **keys** son esos números: le dicen a React qué elemento es cuál entre renders, de modo que pueda mover, añadir o quitar solo lo necesario.
+
+La key debe ser **estable** y **única entre hermanos**: lo ideal es un `id` que venga de tus datos. El índice del array parece cómodo, pero si la lista se reordena o se borran elementos, cada índice pasa a apuntar a otro dato y aparecen bugs raros, como un input que conserva el texto de la fila equivocada.
+
+TypeScript entra aquí con una ventaja enorme: defines un tipo para cada elemento (`Tarea`, `Producto`...) y el `map` ya sabe qué forma tiene cada item. Si escribes mal `t.textoo`, el editor te lo marca antes de que lo vea nadie.
+
+## Paso a paso
+
+<Step n={1} title="Define el tipo del elemento">
+
+Antes de pintar nada, describe tus datos. Un `type` con `id` numérico o de texto te da la key gratis.
+
+```tsx
+type Tarea = {
+  id: number;
+  texto: string;
+};
+```
+
+</Step>
+
+<Step n={2} title="Guarda el array en estado">
+
+Tipa el estado con `useState<Tarea[]>` para que React y TypeScript sepan que es una lista de tareas, incluso si empieza vacía.
+
+```tsx
+const [tareas, setTareas] = useState<Tarea[]>([]);
+```
+
+</Step>
+
+<Step n={3} title="Transforma con map y pon la key">
+
+La key va en el elemento más externo que devuelve el `map`, no dentro de un componente hijo.
+
+```tsx
+<ul>
+  {tareas.map((t) => (
+    <li key={t.id}>{t.texto}</li>
+  ))}
+</ul>
+```
+
+</Step>
+
+<Step n={4} title="Añade y quita sin mutar">
+
+Nunca uses `push` ni `splice` sobre el estado. Crea un array nuevo: con el operador spread para añadir y con `filter` para quitar.
+
+```tsx
+setTareas([...tareas, nueva]);
+setTareas(tareas.filter((t) => t.id !== id));
+```
+
+</Step>
+
+<Step n={5} title="Gestiona la lista vacía">
+
+Una lista sin elementos no debería dejar la pantalla en blanco. Un renderizado condicional con un mensaje amable mejora mucho la experiencia.
+
+</Step>
+
+## Pruébalo en vivo
+
+Añade y quita tareas. Fíjate en que cada `li` usa el `id` como key y en que la lista vacía muestra un mensaje.
+
+<Playground file="dia-08/ListaTareas.tsx" title="Lista de tareas con keys" />
+
+## Error típico
+
+<Warning title="Usar el índice como key (o no poner key)">
+
+Si olvidas la key, React te avisa en la consola con un mensaje poco amistoso. Si la pones, pero usas `key={index}` en una lista que se reordena o borra elementos, React reutilizará el estado del elemento equivocado.
+
+**Qué hacer:** usa un `id` propio de los datos. Genera el id al crear el elemento, no durante el renderizado, y nunca uses `Math.random()` como key: cambiaría en cada render y React recrearía todo.
+
+</Warning>
+
+<Warning title="Mutar el array del estado">
+
+Un `tareas.push(nueva)` modifica el array original y React no detecta el cambio, así que la pantalla no se actualiza o lo hace a medias.
+
+**Qué hacer:** crea siempre un array nuevo con spread, `filter` o `map`, y pásalo al setter.
+
+</Warning>
+
+## Ejercicio
+
+<Exercise criteria={["Los libros se renderizan con map y key basada en el id", "Con la casilla marcada solo se ven los libros pendientes (sin guardar la lista filtrada en estado)", "Si no queda ningún libro visible se muestra un mensaje con className muted", "El tipo Libro se usa sin any ni casts"]} />
+
+<Playground file="dia-08/Ejercicio.starter.tsx" title="Tu turno" />
+
+<Solution file="dia-08/Ejercicio.solution.tsx" />
+
+## Resumen
+
+- Una lista se pinta con `array.map(...)` que devuelve JSX; el resultado es un array de elementos.
+- Cada elemento necesita una `key` única y estable entre hermanos, idealmente un `id` de tus datos.
+- Evita el índice y `Math.random()` como key; nunca mutes el array del estado.
+- Tipar el elemento (`Tarea[]`) te da autocompletado y errores tempranos dentro del `map`.

@@ -1,0 +1,191 @@
+---
+title: Datos, loading, error y SEO
+week: 5
+day: "34"
+order: 30
+objective: Cargar datos con fetch en el servidor, manejar estados de carga y error con loading.tsx y error.tsx, y definir metadata para SEO.
+minutes: 45
+level: avanzado
+reading:
+  - title: Documentación del App Router
+    url: https://nextjs.org/docs/app
+  - title: Server y Client Components
+    url: https://nextjs.org/docs/app/getting-started/server-and-client-components
+  - title: Usar la API Fetch
+    url: https://developer.mozilla.org/es/docs/Web/API/Fetch_API/Using_Fetch
+---
+
+## Concepto
+
+En la semana 4 cargabas datos con `fetch` dentro de un `useEffect`: el navegador descargaba la página vacía, luego pedía los datos y por fin pintaba. En Next.js lo haces distinto: un Server Component puede ser `async` y hacer `await fetch(...)` directamente. Cuando la página llega al navegador, **ya trae los datos dentro del HTML**. Sin `useEffect`, sin `useState` para los datos, sin parpadeo de carga.
+
+Next.js ofrece archivos con nombre especial para los estados intermedios. Si pones un `loading.tsx` en una carpeta, se muestra automáticamente mientras la página espera sus datos. Si pones un `error.tsx`, se muestra si algo falla, con un botón para reintentar. Es el equivalente de los típicos `if (cargando)` y `if (error)` que escribías a mano, pero declarativo.
+
+Y para el SEO, cada página puede exportar un objeto `metadata` con su título y descripción. Los buscadores y las vistas previas de redes sociales los leen del HTML. Para páginas dinámicas, usas la función `generateMetadata`, que calcula el título según los datos.
+
+Un detalle importante para el día 35: si exportas el sitio como estático, el `fetch` se ejecuta **una vez al construir** (`pnpm build`), no en cada visita. Los estados `loading` y `error` cobran más sentido cuando tienes servidor real, pero conviene conocerlos.
+
+## Paso a paso
+
+<Step n={1} title="Haz fetch en un Server Component">
+
+```tsx
+// app/posts/page.tsx
+type Post = { id: number; title: string };
+
+export default async function Posts() {
+  const res = await fetch("https://jsonplaceholder.typicode.com/posts?_limit=5");
+  if (!res.ok) throw new Error("No se pudieron cargar los posts");
+  const posts: Post[] = await res.json();
+
+  return (
+    <ul>
+      {posts.map((p) => (
+        <li key={p.id}>{p.title}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+Si lanzas un error, Next.js lo captura con `error.tsx`.
+
+</Step>
+
+<Step n={2} title="Añade loading.tsx">
+
+```tsx
+// app/posts/loading.tsx
+export default function Loading() {
+  return <p>Cargando posts...</p>;
+}
+```
+
+</Step>
+
+<Step n={3} title="Añade error.tsx">
+
+Este archivo **debe ser un Client Component**, porque usa eventos:
+
+```tsx
+// app/posts/error.tsx
+"use client";
+
+export default function ErrorPosts({ error, reset }: { error: Error; reset: () => void }) {
+  return (
+    <div>
+      <p>Algo salió mal: {error.message}</p>
+      <button type="button" onClick={() => reset()}>
+        Reintentar
+      </button>
+    </div>
+  );
+}
+```
+
+</Step>
+
+<Step n={4} title="Define metadata para SEO">
+
+```tsx
+// app/posts/page.tsx (arriba del componente)
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Posts | Mi blog",
+  description: "Los últimos artículos sobre React y Next.js.",
+};
+```
+
+Para páginas dinámicas usa `generateMetadata`:
+
+```tsx
+// app/blog/[slug]/page.tsx
+import type { Metadata } from "next";
+
+type Props = { params: Promise<{ slug: string }> };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  return { title: `Artículo: ${slug}` };
+}
+```
+
+</Step>
+
+## Pruébalo en vivo
+
+Crea los tres archivos de `app/posts/` (`page.tsx`, `loading.tsx`, `error.tsx`) y ejecuta el servidor:
+
+```bash
+pnpm dev
+```
+
+Visita `/posts` y mira la pestaña del navegador: el título es el de tu `metadata`. Para ver el error, cambia la URL del `fetch` por una que no exista y comprueba que aparece el botón de reintentar. Con la vista del código fuente de la página (clic derecho, ver código fuente) verás que los títulos de los posts ya están dentro del HTML.
+
+<Warning title="Usar useEffect para cargar datos por costumbre">
+
+Si vienes de Vite, es tentador escribir `useEffect` con `fetch` y `useState` en la página. Funcionará, pero obligas al componente a ser de cliente, pierdes los datos en el HTML inicial y empeoras el SEO. Primero intenta cargar los datos en un Server Component `async`. Reserva `useEffect` para datos que dependen de la interacción del usuario en el navegador.
+
+Otro fallo común: olvidar `"use client"` en `error.tsx`. Ese archivo siempre debe llevarlo.
+
+</Warning>
+
+## Ejercicio
+
+<Exercise criteria={["La página /usuarios carga datos con await fetch en un Server Component", "Existe un loading.tsx con un mensaje de carga", "Existe un error.tsx con use client y un botón para reintentar", "La página exporta metadata con title y description"]} />
+
+Crea la ruta `/usuarios` que liste nombres de usuarios desde `https://jsonplaceholder.typicode.com/users`, con sus estados de carga y error, y su metadata.
+
+<Tip title="Solución">
+
+```tsx
+// app/usuarios/page.tsx
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Usuarios",
+  description: "Lista de usuarios cargada en el servidor.",
+};
+
+type Usuario = { id: number; name: string };
+
+export default async function Usuarios() {
+  const res = await fetch("https://jsonplaceholder.typicode.com/users");
+  if (!res.ok) throw new Error("Fallo al cargar usuarios");
+  const usuarios: Usuario[] = await res.json();
+
+  return (
+    <ul>
+      {usuarios.map((u) => (
+        <li key={u.id}>{u.name}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+```tsx
+// app/usuarios/loading.tsx
+export default function Loading() {
+  return <p>Cargando usuarios...</p>;
+}
+```
+
+```tsx
+// app/usuarios/error.tsx
+"use client";
+
+export default function Error({ reset }: { error: Error; reset: () => void }) {
+  return <button type="button" onClick={() => reset()}>Reintentar</button>;
+}
+```
+
+</Tip>
+
+## Resumen
+
+- Un Server Component `async` puede hacer `await fetch` y entregar la página con los datos ya dentro.
+- `loading.tsx` y `error.tsx` gestionan los estados de carga y error de una ruta; `error.tsx` lleva `"use client"`.
+- `metadata` y `generateMetadata` definen título y descripción para el SEO.
+- En un sitio exportado estático, el `fetch` se ejecuta una sola vez durante el build.

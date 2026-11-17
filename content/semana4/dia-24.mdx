@@ -1,0 +1,116 @@
+---
+title: Llamadas a API y datos asíncronos
+week: 4
+day: "24"
+order: 23
+objective: Pedir datos a una API con fetch, cancelar peticiones y modelar loading, error y success con una unión discriminada.
+minutes: 45
+level: intermedio
+reading:
+  - title: Usar la Fetch API (MDN)
+    url: https://developer.mozilla.org/es/docs/Web/API/Fetch_API/Using_Fetch
+  - title: Sincronizar con efectos
+    url: https://react.dev/learn/synchronizing-with-effects
+  - title: Narrowing en TypeScript
+    url: https://www.typescriptlang.org/docs/handbook/2/narrowing.html
+  - title: Genéricos en TypeScript
+    url: https://www.typescriptlang.org/docs/handbook/2/generics.html
+---
+
+## Concepto
+
+Pedir datos a una API es como pedir comida a domicilio: haces el pedido, esperas un rato sin saber cuánto, y puede llegar la comida, llegar equivocada o no llegar nunca. Tu interfaz tiene que saber qué enseñar en cada momento: un "tu pedido está en camino", un "lo sentimos, falló" o el plato servido.
+
+Por eso modelamos la petición con tres estados: `loading`, `error` y `success`. La tentación es usar tres `useState` sueltos (`cargando`, `error`, `datos`), pero así es posible el imposible: cargando y con error a la vez. Una **unión discriminada** lo resuelve: cada estado es un objeto con un campo `status` que lo identifica y con solo los datos que le corresponden.
+
+Con `fetch` hay dos trampas. La primera: `fetch` solo rechaza la promesa si falla la red; un 404 o un 500 *no* lanzan error, tienes que mirar `res.ok`. La segunda: si el componente se desmonta o la URL cambia mientras la petición vuela, la respuesta vieja puede pisar a la nueva. La solución es `AbortController`, que cancela la petición en el cleanup del efecto.
+
+Y como todo esto se repite en cada pantalla, lo empaquetamos en un **custom hook genérico** `useFetch<T>`: tú le dices qué forma tienen los datos (`T`) y él te devuelve un estado perfectamente tipado.
+
+## Paso a paso
+
+<Step n={1} title="Define el tipo del estado">
+
+```tsx
+type Estado<T> =
+  | { status: "loading" }
+  | { status: "error"; mensaje: string }
+  | { status: "success"; data: T };
+```
+
+El genérico `T` permite reutilizar el tipo para usuarios, posts o lo que sea.
+
+</Step>
+
+<Step n={2} title="Haz la petición dentro de un efecto con AbortController">
+
+Crea el controller dentro del efecto, pásale la `signal` a `fetch` y cancélalo en el cleanup:
+
+```tsx
+useEffect(() => {
+  const controller = new AbortController();
+  fetch(url, { signal: controller.signal });
+  return () => controller.abort();
+}, [url]);
+```
+
+</Step>
+
+<Step n={3} title="Comprueba res.ok y distingue las cancelaciones">
+
+Si `!res.ok`, lanza un `Error` para que lo capture el `catch`. Y cuando el error sea un `AbortError`, ignóralo: cancelar es lo esperado (en StrictMode, de hecho, pasa siempre en desarrollo).
+
+</Step>
+
+<Step n={4} title="Extrae el hook useFetch genérico">
+
+Mueve todo a una función `useFetch<T>(url)` que devuelva `Estado<T>`. Los componentes quedan limpios y no repiten la lógica.
+
+</Step>
+
+<Step n={5} title="Pinta cada estado con un switch">
+
+Al hacer `switch (estado.status)`, TypeScript acota el tipo: en la rama `success` sabe que existe `estado.data`, y en `error` que existe `estado.mensaje`. Si intentas leer `data` en `loading`, el compilador te avisa.
+
+</Step>
+
+## Pruébalo en vivo
+
+El ejemplo pide usuarios a `jsonplaceholder.typicode.com`, una API pública de pruebas. Pulsa "Provocar error" para pedir el usuario 999, que da 404. Si el editor no tiene red, verás el estado de error: también vale como práctica.
+
+<Playground file="dia-24/Usuarios.tsx" title="useFetch genérico" />
+
+## Error típico
+
+<Warning title="Creer que fetch falla con un 404">
+
+`fetch` solo rechaza la promesa ante errores de red. Una respuesta 404 o 500 llega como respuesta normal, con `res.ok` en `false`. Si no lo compruebas, intentarás leer como datos válidos lo que en realidad es un error. Siempre: `if (!res.ok) throw new Error(...)`.
+
+</Warning>
+
+<Warning title="Efectos sin cancelación">
+
+Sin `AbortController` (o una bandera de cancelado), una respuesta lenta de una petición antigua puede llegar después de la nueva y mostrar datos desfasados. Además, intentar actualizar un componente ya desmontado es trabajo inútil. Cancela siempre en el cleanup.
+
+</Warning>
+
+<Tip title="Y en proyectos grandes">
+
+Cuando necesites caché, reintentos o revalidación, existen librerías especializadas. Aun así, entender este patrón base te hará usarlas con criterio.
+
+</Tip>
+
+## Ejercicio
+
+<Exercise criteria={["Usar AbortController y cancelar en el cleanup","Comprobar res.ok y lanzar un Error si falla","Estado modelado como unión discriminada","Botón Reintentar que vuelve a lanzar la petición"]} />
+
+<Playground file="dia-24/Ejercicio.starter.tsx" title="Tu turno" />
+
+<Solution file="dia-24/Ejercicio.solution.tsx" />
+
+## Resumen
+
+- Modela la petición con una unión discriminada (`loading`, `error`, `success`), no con tres booleanos sueltos.
+- `fetch` no rechaza por 404 o 500: comprueba `res.ok`.
+- Cancela con `AbortController` en el cleanup del efecto e ignora el `AbortError`.
+- Un hook genérico `useFetch<T>` evita repetir la lógica y mantiene los datos tipados.

@@ -1,0 +1,106 @@
+---
+title: "Proyecto: glosario con hooks y contexto"
+week: 3
+day: "21"
+order: 20
+objective: Integrar useState, useReducer, useMemo, hooks propios y dos contextos en un glosario con filtrado, paginación y cambio de acento.
+minutes: 60
+level: intermedio
+reading:
+  - title: Escalar con reducer y contexto
+    url: https://react.dev/learn/scaling-up-with-reducer-and-context
+  - title: Elegir la estructura del estado
+    url: https://react.dev/learn/choosing-the-state-structure
+  - title: Pensar en React
+    url: https://react.dev/learn/thinking-in-react
+  - title: React con TypeScript
+    url: https://react.dev/learn/typescript
+---
+
+## Concepto
+
+Esta semana has ido recogiendo piezas: `useState` y `useEffect`, hooks propios, contexto, reducers, refs y memoización. Hoy las montas todas juntas, como el que por fin ensambla el mueble después de pasar una semana mirando los tornillos. El proyecto es un **glosario de React** con búsqueda, filtro por categoría, paginación y un selector de color de acento.
+
+Lo más importante de un proyecto no es el código, es el **diseño del estado**. Antes de escribir nada, decide qué es estado y qué se puede calcular. Aquí el estado real es pequeño: texto de búsqueda, categoría, página actual y elementos por página. Todo lo demás (la lista filtrada, el número de páginas, los elementos visibles) es **estado derivado**: se calcula a partir del anterior con `useMemo`, nunca se guarda.
+
+La arquitectura usa **dos contextos separados**, porque cambian por razones distintas. El de acento guarda un color (persistido con un `useLocalStorage` genérico) y el de catálogo agrupa los filtros con un `useReducer` y los datos ya calculados. Cada uno tiene su Provider y su hook `useX` que lanza error si falta el Provider.
+
+Fíjate en un detalle del reducer: cualquier cambio de filtro devuelve la página a la 1. Si estás en la página 4 y filtras hasta quedarte con dos resultados, quedarte en la página 4 sería un bug. Esas reglas de negocio viven mejor en el reducer que repartidas por los componentes.
+
+## Paso a paso
+
+<Step n={1} title="Dibuja el estado antes que la interfaz">
+
+Escribe el tipo `Filtros` con lo mínimo imprescindible y deja fuera todo lo que se pueda calcular:
+
+```tsx
+type Filtros = {
+  consulta: string;
+  categoria: Categoria | "Todas";
+  pagina: number;
+  porPagina: number;
+};
+```
+
+</Step>
+
+<Step n={2} title="Modela las acciones y el reducer">
+
+Una unión discriminada con `consulta`, `categoria`, `pagina`, `porPagina` y `limpiar`. Las acciones que cambian el filtro reinician `pagina` a 1, y `assertNever` cierra el `switch`.
+
+</Step>
+
+<Step n={3} title="Calcula lo derivado con useMemo">
+
+El Provider del catálogo filtra los términos (dependiendo solo de consulta y categoría) y después corta la página actual. Aplica `Math.min` para que la página nunca supere el total, aunque el estado diga otra cosa.
+
+</Step>
+
+<Step n={4} title="Crea los dos contextos y sus hooks">
+
+`AcentoProvider` con `useLocalStorage`, y `CatalogoProvider` con `useReducer`. Cada uno expone su hook `useAcento` y `useCatalogo`. Los componentes no saben cómo se guarda nada: solo piden lo que necesitan.
+
+</Step>
+
+<Step n={5} title="Compón componentes pequeños">
+
+`Buscador`, `Lista`, `Paginador` y `SelectorAcento` no reciben props: leen del contexto. Cada uno hace una sola cosa, y la pantalla solo los coloca.
+
+</Step>
+
+## Pruébalo en vivo
+
+Busca "use", filtra por categoría, cambia el tamaño de página y elige un acento. Recarga la vista previa: el color se queda guardado. Tómate un rato para leer el código de arriba abajo: es el repaso de toda la semana en un solo archivo.
+
+<Playground file="dia-21/Glosario.tsx" title="Glosario de React" />
+
+<Tip title="Ideas para ampliarlo">
+
+Añade un botón para ordenar alfabéticamente (otra acción en el reducer), guarda los filtros en `localStorage`, o marca términos como favoritos con un tercer contexto. En proyectos reales, el siguiente paso suele ser sacar los contextos a archivos propios; aquí están en uno solo para que puedas probarlo en el navegador.
+
+</Tip>
+
+## Error típico
+
+<Warning title="Guardar en estado lo que se puede calcular">
+
+El error clásico de este tipo de proyecto es tener un estado `resultados` que se rellena con un `useEffect` cada vez que cambia el filtro. Funciona, pero sincronizar dos estados a mano genera parpadeos y bugs de "un render de retraso".
+
+Qué hacer: guarda solo los filtros y calcula los resultados durante el render con `useMemo`. Y si algo cambia el filtro, reinicia la página en la misma acción del reducer, no en un efecto aparte.
+
+</Warning>
+
+## Ejercicio
+
+<Exercise criteria={["Existe un estado pagina de tipo number que empieza en 1", "totalPaginas se calcula a partir de filtrados.length y POR_PAGINA, con mínimo 1", "visibles se obtiene con slice según la página actual", "Al cambiar la búsqueda se vuelve a la página 1", "Los botones Anterior y Siguiente se deshabilitan en los extremos"]} />
+
+<Playground file="dia-21/Ejercicio.starter.tsx" title="Tu turno" />
+
+<Solution file="dia-21/Ejercicio.solution.tsx" />
+
+## Resumen
+
+- Diseña primero el estado mínimo y calcula todo lo demás con `useMemo`: el estado derivado no se guarda.
+- `useReducer` es el lugar ideal para reglas como "al cambiar el filtro, vuelve a la página 1".
+- Varios contextos pequeños (acento, catálogo) son mejores que uno gigante, y cada uno merece su hook `useX` con error claro.
+- Los hooks personalizados genéricos, como `useLocalStorage`, hacen que la persistencia no ensucie los componentes.

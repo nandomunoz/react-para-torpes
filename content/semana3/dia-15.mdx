@@ -1,0 +1,115 @@
+---
+title: useState y useEffect con TypeScript
+week: 3
+day: "15"
+order: 14
+objective: Tipar correctamente el estado con useState y escribir efectos con dependencias y cleanup que toleren StrictMode.
+minutes: 40
+level: intermedio
+reading:
+  - title: useState en la referencia de React
+    url: https://react.dev/reference/react/useState
+  - title: useEffect en la referencia de React
+    url: https://react.dev/reference/react/useEffect
+  - title: Sincronizar con efectos
+    url: https://react.dev/learn/synchronizing-with-effects
+  - title: React con TypeScript
+    url: https://react.dev/learn/typescript
+---
+
+## Concepto
+
+Hasta ahora tus componentes eran como una nevera sin memoria: cada vez que se renderizaban, empezaban de cero. Los **hooks** son funciones que empiezan por `use` y le dan superpoderes a los componentes de función. `useState` les da memoria, y `useEffect` les permite hablar con el mundo exterior: el título de la pestaña, un temporizador, un listener del navegador.
+
+Con TypeScript, `useState` casi siempre infiere el tipo solo: `useState(0)` es un `number` y `useState("")` es un `string`. Pero cuando el valor inicial no cuenta toda la historia (por ejemplo `null` que luego será un usuario, o un texto que solo puede ser tres valores concretos) tienes que ayudarle con un genérico: `useState<string | null>(null)` o `useState<"detenido" | "corriendo">("detenido")`.
+
+`useEffect` es el hook de la **sincronización**. No lo pienses como "ejecutar algo al montar", piénsalo como "mantener sincronizado este trozo del mundo con este estado". Recibe una función y un array de **dependencias**: React vuelve a ejecutar el efecto solo cuando alguna dependencia cambió.
+
+Y aquí viene lo importante: el efecto puede devolver una función de **limpieza** (cleanup). React la llama antes de volver a ejecutar el efecto y cuando el componente se desmonta. En desarrollo, `StrictMode` monta, desmonta y vuelve a montar tu componente a propósito para comprobar que tu cleanup deshace bien lo que el efecto hizo. Si tu app se rompe con eso, el bug ya estaba ahí, StrictMode solo lo enseña antes.
+
+## Paso a paso
+
+<Step n={1} title="Tipa el estado cuando la inferencia no alcanza">
+
+Para valores simples deja que TypeScript infiera. Para uniones o `null`, usa el genérico:
+
+```tsx
+const [segundos, setSegundos] = useState(0); // number
+const [estado, setEstado] = useState<"detenido" | "corriendo" | "pausado">("detenido");
+const [usuario, setUsuario] = useState<string | null>(null);
+```
+
+</Step>
+
+<Step n={2} title="Actualiza con la forma funcional">
+
+Si el nuevo valor depende del anterior, pasa una función. Así evitas leer un valor viejo dentro de un intervalo:
+
+```tsx
+setSegundos((s) => s + 1);
+```
+
+</Step>
+
+<Step n={3} title="Escribe el efecto con sus dependencias">
+
+Todo valor reactivo que uses dentro del efecto (estado, props) va en el array. Con `[]` el efecto corre una vez; sin array corre tras cada render (casi nunca lo quieres).
+
+```tsx
+useEffect(() => {
+  if (estado !== "corriendo") return;
+  const id = window.setInterval(() => setSegundos((s) => s + 1), 1000);
+  return () => window.clearInterval(id);
+}, [estado]);
+```
+
+</Step>
+
+<Step n={4} title="Pon siempre el cleanup">
+
+Todo lo que el efecto abre (intervalos, listeners, suscripciones) debe cerrarse en la función que devuelve. Pregúntate: "si este efecto corre dos veces seguidas, ¿se acumula algo?". Si sí, falta un cleanup.
+
+</Step>
+
+<Step n={5} title="Separa efectos por responsabilidad">
+
+Un efecto para el intervalo y otro para el título de la pestaña. Dos efectos pequeños y claros son mejores que uno enorme con dependencias mezcladas.
+
+</Step>
+
+## Pruébalo en vivo
+
+El temporizador usa un estado tipado con unión de textos, un efecto con intervalo y otro que sincroniza `document.title`. Pausa, reanuda y fíjate en que nunca hay dos intervalos activos.
+
+<Playground file="dia-15/Temporizador.tsx" title="Temporizador con useState y useEffect" />
+
+<Tip title="Los efectos no son para todo">
+
+Si puedes calcular algo directamente durante el render (por ejemplo, el texto "Móvil" o "Escritorio" a partir de un ancho), no necesitas un efecto ni otro estado. Los efectos son para sincronizar con sistemas externos al componente.
+
+</Tip>
+
+## Error típico
+
+<Warning title="Efecto sin cleanup (o con dependencias mentirosas)">
+
+Si escribes `setInterval` sin devolver `clearInterval`, en StrictMode verás el contador ir al doble de velocidad: quedaron dos intervalos vivos. Y si omites una dependencia para "que no se repita", el efecto usará valores viejos.
+
+Qué hacer: devuelve siempre el cleanup y declara todas las dependencias. Si el efecto se repite demasiado, cambia la forma del código (por ejemplo con `setSegundos((s) => s + 1)`), no mientas en el array.
+
+</Warning>
+
+## Ejercicio
+
+<Exercise criteria={["El ancho de la ventana está en un estado tipado como number", "Un useEffect añade un listener de resize y lo elimina en el cleanup", "El efecto tiene un array de dependencias correcto", "El texto Móvil o Escritorio se calcula en el render, sin estado extra"]} />
+
+<Playground file="dia-15/Ejercicio.starter.tsx" title="Tu turno" />
+
+<Solution file="dia-15/Ejercicio.solution.tsx" />
+
+## Resumen
+
+- `useState` infiere el tipo del valor inicial; usa `useState<T>` para `null`, uniones y objetos que empiezan vacíos.
+- `useEffect` sincroniza tu componente con algo externo y se reejecuta solo cuando cambian sus dependencias.
+- Todo efecto que abre algo (intervalo, listener) debe cerrarlo en su función de cleanup.
+- StrictMode ejecuta los efectos dos veces en desarrollo para ayudarte a encontrar cleanups que faltan.

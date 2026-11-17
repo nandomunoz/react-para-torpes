@@ -1,0 +1,111 @@
+---
+title: useReducer con acciones tipadas
+week: 3
+day: "18"
+order: 17
+objective: Modelar el estado complejo con useReducer y acciones como unión discriminada, y combinarlo con Context.
+minutes: 45
+level: intermedio
+reading:
+  - title: Extraer la lógica de estado en un reducer
+    url: https://react.dev/learn/extracting-state-logic-into-a-reducer
+  - title: Escalar con reducer y contexto
+    url: https://react.dev/learn/scaling-up-with-reducer-and-context
+  - title: useReducer en la referencia de React
+    url: https://react.dev/reference/react/useReducer
+  - title: Narrowing en TypeScript
+    url: https://www.typescriptlang.org/docs/handbook/2/narrowing.html
+---
+
+## Concepto
+
+`useState` es perfecto para un contador o un campo de texto. Pero cuando tienes un carrito de la compra con añadir, quitar, cambiar cantidades y vaciar, empiezas a tener cinco funciones que tocan el mismo estado y ya no sabes quién rompió qué. `useReducer` pone orden: en lugar de modificar el estado desde cualquier sitio, los componentes **describen lo que pasó** (una acción) y una única función, el **reducer**, decide cómo cambia el estado.
+
+Es como el camarero de un restaurante: tú no entras a la cocina, le dices "una paella" y la cocina (el reducer) la prepara. El reducer es una función pura: recibe el estado actual y una acción, y devuelve el estado nuevo sin mutar el anterior.
+
+TypeScript convierte esto en un lujo con las **uniones discriminadas**. Cada acción es un objeto con un campo `tipo` que actúa como etiqueta, y los demás campos dependen de esa etiqueta. Dentro de `case "cambiarCantidad"`, TypeScript sabe que existe `accion.cantidad`, y dentro de `case "vaciar"` sabe que no hay nada más. Y con un truco, `assertNever`, el compilador te avisa si añades una acción y olvidas manejarla.
+
+La segunda parte del día es combinar `useReducer` con contexto: el Provider guarda el estado y el `dispatch`, y cualquier componente de abajo puede enviar acciones sin recibir props. Es el patrón que sostiene muchas apps medianas sin necesidad de librerías externas.
+
+## Paso a paso
+
+<Step n={1} title="Modela el estado y las acciones">
+
+Escribe los tipos primero. La unión discriminada documenta todo lo que puede ocurrir:
+
+```tsx
+type Accion =
+  | { tipo: "agregar"; producto: Producto }
+  | { tipo: "quitar"; id: number }
+  | { tipo: "cambiarCantidad"; id: number; cantidad: number }
+  | { tipo: "vaciar" };
+```
+
+</Step>
+
+<Step n={2} title="Escribe el reducer con switch">
+
+Un `case` por cada `tipo`. Siempre devuelves un estado nuevo (con `map`, `filter` o el operador spread), nunca mutas el anterior.
+
+</Step>
+
+<Step n={3} title="Cierra con assertNever">
+
+En el `default`, pasa la acción a una función que recibe `never`. Si queda alguna acción sin manejar, el código deja de compilar:
+
+```tsx
+function assertNever(valor: never): never {
+  throw new Error(`Acción no manejada: ${JSON.stringify(valor)}`);
+}
+```
+
+</Step>
+
+<Step n={4} title="Conecta el reducer con useReducer">
+
+`const [lineas, dispatch] = useReducer(carritoReducer, [])` infiere los tipos del reducer. Para enviar una acción, llama a `dispatch({ tipo: "vaciar" })`.
+
+</Step>
+
+<Step n={5} title="Compártelo con un Context">
+
+Pon `lineas`, `dispatch` y los datos derivados (como el total) en el valor del contexto, y crea un hook `useCarrito` que lance error si falta el Provider, igual que ayer. `dispatch` es estable: React garantiza que nunca cambia.
+
+</Step>
+
+## Pruébalo en vivo
+
+Una mini tienda: `Tienda` y `Resumen` están separados y solo se comunican a través del contexto. Prueba a añadir el mismo producto varias veces y a bajar la cantidad hasta cero.
+
+<Playground file="dia-18/Carrito.tsx" title="Carrito con useReducer y Context" />
+
+<Tip title="Cuándo usar useReducer">
+
+Si el estado es un valor suelto, quédate con `useState`. Si tienes varios campos que cambian juntos, transiciones con reglas ("no pasar de cero") o muchas formas de actualizar lo mismo, un reducer te lo va a agradecer.
+
+</Tip>
+
+## Error típico
+
+<Warning title="Mutar el estado dentro del reducer">
+
+Escribir `estado.push(nuevo)` o `linea.cantidad += 1` dentro del reducer modifica el estado original: React no detecta el cambio, o en StrictMode ves efectos duplicados porque el reducer se ejecuta dos veces.
+
+Qué hacer: devuelve siempre valores nuevos: `[...estado, nuevo]`, `estado.map(...)`, `{ ...linea, cantidad: linea.cantidad + 1 }`. Y no metas efectos (llamadas, `Date.now()`, aleatorios) dentro del reducer: debe ser puro.
+
+</Warning>
+
+## Ejercicio
+
+<Exercise criteria={["La acción alternar cambia hecha solo en la tarea con ese id, sin mutar", "La acción borrar elimina la tarea con filter", "La acción limpiarHechas deja únicamente las tareas pendientes", "El default sigue usando assertNever y el código compila sin errores", "Ningún case muta el array de estado"]} />
+
+<Playground file="dia-18/Ejercicio.starter.tsx" title="Tu turno" />
+
+<Solution file="dia-18/Ejercicio.solution.tsx" />
+
+## Resumen
+
+- `useReducer` centraliza las transformaciones del estado: los componentes envían acciones y el reducer decide.
+- Las acciones como unión discriminada (`tipo` como etiqueta) dan autocompletado y comprobación exacta en cada `case`.
+- `assertNever` en el `default` obliga a manejar toda acción nueva.
+- Reducer más Context da estado global sin librerías: guarda `state` y `dispatch` en el Provider y consúmelos con un hook propio.

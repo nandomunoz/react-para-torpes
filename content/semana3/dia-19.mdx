@@ -1,0 +1,111 @@
+---
+title: useRef y useMemo con TypeScript
+week: 3
+day: "19"
+order: 18
+objective: Usar useRef para el DOM y para valores mutables sin render, y useMemo para evitar cálculos repetidos.
+minutes: 40
+level: intermedio
+reading:
+  - title: Referenciar valores con refs
+    url: https://react.dev/learn/referencing-values-with-refs
+  - title: Manipular el DOM con refs
+    url: https://react.dev/learn/manipulating-the-dom-with-refs
+  - title: useRef en la referencia de React
+    url: https://react.dev/reference/react/useRef
+  - title: useMemo en la referencia de React
+    url: https://react.dev/reference/react/useMemo
+---
+
+## Concepto
+
+Hoy toca conocer a dos hooks que se parecen a una mochila y a una libreta. `useRef` es la **mochila**: guardas algo dentro, lo sacas cuando quieres y React no se entera ni se vuelve a renderizar por ello. `useMemo` es la **libreta de resultados**: apuntas el resultado de una cuenta difícil y, si los datos son los mismos, lees la libreta en lugar de repetir la cuenta.
+
+`useRef` sirve para dos cosas. La primera es acceder a un **elemento del DOM**, por ejemplo para enfocar un input. En TypeScript lo tipas con el elemento concreto: `useRef<HTMLInputElement>(null)`. Empieza en `null` hasta que React monta el elemento, así que lees `inputRef.current?.focus()` con el operador `?.`. La segunda es guardar un **valor mutable** que no se pinta en pantalla: un id de temporizador, un contador de pulsaciones, el valor anterior de algo. Cambiar `ref.current` no provoca render.
+
+Una regla de oro: no leas ni escribas `ref.current` durante el render (solo en eventos y efectos). El render debe ser predecible, y una ref que cambia por detrás no lo es.
+
+`useMemo` recuerda el resultado de una función entre renders y solo la reejecuta cuando cambia alguna dependencia. Sirve para cálculos pesados (filtrar y ordenar miles de elementos) y para mantener la **misma referencia** de un objeto o array. Pero ojo: es una optimización, no una garantía. Tu código debe funcionar igual sin él. Medir primero, memoizar después.
+
+## Paso a paso
+
+<Step n={1} title="Crea una ref para un elemento del DOM">
+
+Indica el tipo del elemento y pasa la ref con el atributo `ref`:
+
+```tsx
+const inputRef = useRef<HTMLInputElement>(null);
+// ...
+<input ref={inputRef} />
+```
+
+</Step>
+
+<Step n={2} title="Úsala en un evento, no en el render">
+
+Dentro de un manejador, `current` ya apunta al elemento. Como puede ser `null`, usa `?.`:
+
+```tsx
+<button onClick={() => inputRef.current?.focus()}>Enfocar</button>
+```
+
+</Step>
+
+<Step n={3} title="Usa una ref como caja mutable">
+
+Para un contador que no se muestra, `useRef<number>(0)` evita renders innecesarios. Si necesitas verlo en pantalla, cópialo a un estado cuando haga falta, como hace el botón "Leer pulsaciones" del ejemplo.
+
+</Step>
+
+<Step n={4} title="Memoiza un cálculo pesado con useMemo">
+
+Pasa una función que calcula y un array de dependencias:
+
+```tsx
+const resultado = useMemo(() => contarPrimos(limite), [limite]);
+```
+
+</Step>
+
+<Step n={5} title="Comprueba que de verdad ahorra trabajo">
+
+Cambia un estado que no esté en las dependencias y comprueba que el resultado no se recalcula. En el ejemplo, la hora de cálculo no cambia al pulsar "Re-render ajeno".
+
+</Step>
+
+## Pruébalo en vivo
+
+Escribe en el input, enfócalo con el botón y lee las pulsaciones acumuladas en la ref. Abajo, sube el límite (recalcula) y pulsa el botón ajeno (no recalcula: la hora se queda quieta).
+
+<Playground file="dia-19/RefYMemo.tsx" title="useRef y useMemo en acción" />
+
+<Tip title="Estado o ref">
+
+Pregúntate: ¿esto debe aparecer en pantalla? Si sí, es estado. Si es información interna que React no necesita pintar (un id, un contador oculto, un elemento), es una ref.
+
+</Tip>
+
+## Error típico
+
+<Warning title="Esperar que cambiar una ref actualice la pantalla">
+
+Si haces `contador.current += 1` y esperas ver el número cambiar en la interfaz, no pasará: las refs no provocan render. El valor sí cambió, pero nadie se lo ha dicho al componente.
+
+Otro clásico es envolver todo en `useMemo` "por si acaso". Memoizar tiene un coste y suma complejidad; úsalo cuando hayas medido que el cálculo es lento o cuando necesites estabilizar una referencia. Y recuerda: la función de `useMemo` debe ser pura (en el ejemplo la hora es solo una demostración).
+
+</Warning>
+
+## Ejercicio
+
+<Exercise criteria={["conceptoRef se crea con useRef de HTMLInputElement y se asigna al input de concepto", "Tras añadir un gasto el foco vuelve al input de concepto usando focus con operador ?.", "total se calcula con useMemo dependiendo de gastos", "No se usa ref.current durante el render", "El estado de gastos se actualiza sin mutar el array"]} />
+
+<Playground file="dia-19/Ejercicio.starter.tsx" title="Tu turno" />
+
+<Solution file="dia-19/Ejercicio.solution.tsx" />
+
+## Resumen
+
+- `useRef<HTMLInputElement>(null)` da acceso al DOM; `current` puede ser `null`, así que usa `?.`.
+- Una ref también guarda valores mutables que no se pintan, sin provocar renders.
+- No leas ni escribas `ref.current` durante el render: hazlo en eventos y efectos.
+- `useMemo` recuerda un cálculo mientras no cambien sus dependencias; es una optimización, no un requisito.

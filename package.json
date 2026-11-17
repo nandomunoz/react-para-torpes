@@ -1,0 +1,22 @@
+{
+  "name": "react-para-torpes",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Curso gratuito en español de React + TypeScript en 30 días, con landing interactiva.",
+  "license": "MIT",
+  "packageManager": "pnpm@9.0.0",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "dev": "pnpm --filter web dev",
+    "build": "pnpm --filter web build",
+    "start": "pnpm dlx serve web/out",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r --if-present test",
+    "examples": "pnpm --filter examples dev",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "prettier": "^3.6.0"
+  }
+}

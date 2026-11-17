@@ -1,0 +1,112 @@
+---
+title: Props y listas tipadas
+week: 1
+day: "3"
+order: 3
+objective: Pasar datos a un componente con props tipadas y renderizar una lista con map y key.
+minutes: 35
+level: básico
+reading:
+  - title: Pasar props a un componente
+    url: https://react.dev/learn/passing-props-to-a-component
+  - title: Renderizar listas
+    url: https://react.dev/learn/rendering-lists
+  - title: TypeScript con React
+    url: https://react.dev/learn/typescript
+---
+
+## Concepto
+
+Las props son los argumentos de tu componente. Si un componente es una receta, las props son los ingredientes que le entregas: el mismo código puede preparar cosas distintas según lo que reciba.
+
+Con TypeScript, además, describes la forma exacta de esos ingredientes. Si el componente espera un arreglo de personas y tú le pasas un número, el editor te avisa en rojo antes de que algo explote. Es como un camarero que te dice "eso no lo tenemos en carta".
+
+Para mostrar listas se usa `map`: recorres un arreglo y devuelves un elemento de JSX por cada dato. Cada elemento necesita una `key` única y estable (normalmente un `id`), para que React sepa cuál es cuál cuando la lista cambie.
+
+## Paso a paso
+
+<Step n={1} title="Define el tipo de cada elemento">
+
+Describe la forma de un dato individual con un `type`:
+
+```tsx
+type Persona = {
+  id: number;
+  nombre: string;
+  rol: string;
+};
+```
+
+</Step>
+
+<Step n={2} title="Define el tipo de las props">
+
+Las props del componente incluyen un arreglo de `Persona`. La sintaxis `Persona[]` significa "lista de personas":
+
+```tsx
+type ListaPersonasProps = {
+  titulo: string;
+  personas: Persona[];
+};
+```
+
+</Step>
+
+<Step n={3} title="Recorre con map y añade key">
+
+Dentro del JSX conviertes cada dato en un `li`. La `key` va en el elemento más externo que devuelve `map`:
+
+```tsx
+<ul>
+  {personas.map((p) => (
+    <li key={p.id}>{p.nombre}</li>
+  ))}
+</ul>
+```
+
+</Step>
+
+<Step n={4} title="Pasa los datos desde el padre">
+
+En `App` creas el arreglo tipado y lo entregas como prop: `personas={equipo}`. TypeScript comprobará que cada objeto cumple con `Persona`.
+
+</Step>
+
+## Pruébalo en vivo
+
+Prueba a añadir una persona más al arreglo. Después intenta quitarle el campo `rol` a una de ellas y observa cómo TypeScript se queja.
+
+<Playground file="dia-03/ListaNombres.tsx" title="Lista de personas con props tipadas" />
+
+## Error típico
+
+<Warning title="Olvidar la key o usar el índice">
+
+Si no pones `key`, React muestra un aviso en la consola. Si usas el índice del arreglo como `key`, todo parece funcionar hasta que reordenas o borras elementos y aparecen datos mezclados.
+
+Usa siempre un identificador propio del dato, como `p.id`.
+
+</Warning>
+
+<Warning title="Pasar la prop con el tipo equivocado">
+
+Escribir `personas="Ana"` pasa un texto donde se espera un arreglo. No hace falta ejecutar nada: TypeScript lo marca en el editor. Lee el mensaje de error, casi siempre te dice qué tipo esperaba.
+
+</Warning>
+
+## Ejercicio
+
+Construye una lista de tareas de solo lectura.
+
+<Exercise criteria={["Defines ListaTareasProps con la prop tareas de tipo Tarea[]","Recorres las tareas con map y cada li lleva key con el id","Las tareas hechas muestran una marca ✅ antes del texto","App renderiza ListaTareas pasándole el arreglo de tareas"]} />
+
+<Playground file="dia-03/Ejercicio.starter.tsx" title="Tu turno" />
+
+<Solution file="dia-03/Ejercicio.solution.tsx" />
+
+## Resumen
+
+- Las props son los datos que un componente recibe de su padre.
+- Un `type` describe la forma de las props y TypeScript vigila que se cumpla.
+- Para listas usas `map` y devuelves un elemento de JSX por dato.
+- Cada elemento de la lista necesita una `key` única y estable, mejor un `id` que el índice.

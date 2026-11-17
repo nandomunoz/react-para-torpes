@@ -1,0 +1,125 @@
+---
+title: Tu entorno con Vite y TypeScript
+week: 1
+day: "1"
+order: 1
+objective: Crear un proyecto de React con Vite y TypeScript y verlo funcionando en el navegador.
+minutes: 30
+level: básico
+reading:
+  - title: Empezar un proyecto nuevo de React
+    url: https://react.dev/learn/start-a-new-react-project
+  - title: Guía de Vite
+    url: https://vite.dev/guide/
+  - title: TypeScript en 5 minutos
+    url: https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes.html
+---
+
+## Concepto
+
+React es una biblioteca para construir interfaces a base de piezas pequeñas llamadas componentes. Piensa en un set de Lego: cada pieza es sencilla, pero juntas montan un castillo (o una app de tareas que nunca terminas).
+
+TypeScript es JavaScript con "cinturón de seguridad". Te avisa de los errores mientras escribes, no cuando tu usuario ya está llorando frente a una pantalla en blanco. En este curso lo usaremos desde el primer día.
+
+Para que todo funcione en tu ordenador necesitas una herramienta que compile y sirva tu código. Esa herramienta es Vite: arranca en un suspiro y refresca el navegador cada vez que guardas. Aquí no usamos Create React App, que ya está jubilado.
+
+## Paso a paso
+
+<Step n={1} title="Comprueba Node y pnpm">
+
+Necesitas Node.js instalado y el gestor de paquetes `pnpm`. Verifica las versiones:
+
+```bash
+node --version
+pnpm --version
+```
+
+Si `pnpm` no existe, instálalo con `corepack enable` y vuelve a probar.
+
+</Step>
+
+<Step n={2} title="Crea el proyecto">
+
+Vite te hace unas preguntas; elige el nombre `mi-app` y la plantilla `react-ts`. Con un solo comando lo tienes:
+
+```bash
+pnpm create vite@latest mi-app --template react-ts
+cd mi-app
+pnpm install
+```
+
+</Step>
+
+<Step n={3} title="Arranca el servidor de desarrollo">
+
+```bash
+pnpm dev
+```
+
+La terminal te mostrará una dirección como `http://localhost:5173`. Ábrela en el navegador y verás la página de bienvenida de Vite con React.
+
+</Step>
+
+<Step n={4} title="Explora la estructura">
+
+Los archivos que más vas a tocar son estos:
+
+- `index.html`: la página base donde vive tu app.
+- `src/main.tsx`: el punto de entrada, monta React en la página.
+- `src/App.tsx`: tu primer componente, el que vas a editar.
+- `package.json`: lista de dependencias y scripts como `pnpm dev`.
+
+</Step>
+
+<Step n={5} title="Haz tu primer cambio">
+
+Abre `src/App.tsx`, borra todo su contenido y reemplázalo por el siguiente componente. Al guardar, el navegador se actualiza solo.
+
+```tsx
+import { version } from "react";
+
+export default function App() {
+  return <h1>Entorno listo con React {version}</h1>;
+}
+```
+
+</Step>
+
+## Pruébalo en vivo
+
+Este `App` confirma que el entorno funciona: muestra la versión de React y la fecha de hoy. Cámbiale el texto y mira cómo se actualiza.
+
+<Playground file="dia-01/EntornoListo.tsx" title="App que confirma tu entorno" />
+
+## Error típico
+
+<Warning title="Usar npm o npx por costumbre">
+
+Muchos tutoriales antiguos mezclan `npm` y `npx`. En este curso usamos siempre `pnpm`: no mezcles gestores en el mismo proyecto o terminarás con dos archivos de bloqueo y errores raros.
+
+Si ya instalaste con otro gestor, borra la carpeta `node_modules` y el archivo de bloqueo sobrante, y ejecuta `pnpm install` otra vez.
+
+</Warning>
+
+<Warning title="Ejecutar los comandos en la carpeta equivocada">
+
+Si `pnpm dev` dice que no encuentra el script, casi seguro estás fuera de `mi-app`. Entra con `cd mi-app` y vuelve a intentarlo.
+
+</Warning>
+
+## Ejercicio
+
+Personaliza tu `App` para que deje de ser anónima.
+
+<Exercise criteria={["Declaras una constante nombre de tipo string con tu nombre","Declaras una constante lenguaje con el valor TypeScript","El h1 muestra el saludo usando el valor de nombre","El párrafo muestra el texto usando el valor de lenguaje"]} />
+
+<Playground file="dia-01/Ejercicio.starter.tsx" title="Tu turno" />
+
+<Solution file="dia-01/Ejercicio.solution.tsx" />
+
+## Resumen
+
+- React construye interfaces con componentes pequeños y reutilizables.
+- TypeScript detecta errores mientras escribes, antes de ejecutar.
+- `pnpm create vite@latest mi-app --template react-ts` crea el proyecto y `pnpm dev` lo arranca.
+- `src/App.tsx` es tu punto de partida: edítalo y el navegador se actualiza solo.

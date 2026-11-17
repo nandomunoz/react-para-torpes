@@ -1,0 +1,145 @@
+---
+title: Vite vs Next.js y tu primer proyecto
+week: 5
+day: "31"
+order: 27
+objective: Entender cuándo elegir Vite y cuándo Next.js, y crear un proyecto Next.js con TypeScript y pnpm.
+minutes: 40
+level: intermedio
+reading:
+  - title: Documentación de Next.js
+    url: https://nextjs.org/docs
+  - title: Empezar un proyecto React nuevo
+    url: https://react.dev/learn/start-a-new-react-project
+  - title: Guía de Vite
+    url: https://vite.dev/guide/
+---
+
+## Concepto
+
+Hasta ahora has trabajado con **Vite**: una herramienta que te sirve tu app React en desarrollo y la empaqueta para producción. Vite te da lo básico (React, TypeScript, recarga rápida) y el resto lo eliges tú: el router, cómo cargar datos, cómo desplegar. Es como comprar muebles sueltos: libertad total, pero te toca montarlos.
+
+**Next.js** es un *framework* construido sobre React. Es la casa ya amueblada: trae enrutado por carpetas, renderizado en el servidor, carga de datos, metadatos para SEO y un sistema de build listo para producción. A cambio, aceptas sus reglas y su forma de organizar el proyecto.
+
+¿Cuándo usar cada uno? Vite brilla en aplicaciones que viven detrás de un login (paneles, herramientas internas) donde el SEO no importa y quieres control total. Next.js brilla cuando importa que el contenido llegue ya renderizado: blogs, tiendas, páginas de marketing, documentación. En ambos casos escribes los mismos componentes React que ya conoces.
+
+Un dato curioso: **este mismo sitio del curso está hecho con Next.js**, exportado como sitio estático. En el día 35 verás cómo se hace.
+
+## Paso a paso
+
+<Step n={1} title="Comprueba tu entorno">
+
+Necesitas Node.js y pnpm instalados. Verifícalo:
+
+```bash
+node --version
+pnpm --version
+```
+
+</Step>
+
+<Step n={2} title="Crea el proyecto">
+
+El asistente oficial se ejecuta con pnpm:
+
+```bash
+pnpm create next-app@latest mi-app-next
+```
+
+Te hará unas preguntas. Para este curso responde que **sí** a TypeScript, ESLint y App Router. Tailwind y el directorio `src/` son opcionales: elige lo que prefieras, pero en las lecciones usaremos la carpeta `app/` en la raíz.
+
+</Step>
+
+<Step n={3} title="Arranca el servidor de desarrollo">
+
+```bash
+cd mi-app-next
+pnpm dev
+```
+
+Abre `http://localhost:3000`. Edita `app/page.tsx`, guarda y verás el cambio al instante.
+
+</Step>
+
+<Step n={4} title="Reconoce la estructura de carpetas">
+
+```bash
+mi-app-next/
+├── app/
+│   ├── layout.tsx      # envoltorio común de todas las páginas
+│   ├── page.tsx        # la página de inicio (ruta /)
+│   └── globals.css     # estilos globales
+├── public/             # archivos estáticos (imágenes, favicon)
+├── next.config.ts      # configuración de Next.js
+├── tsconfig.json
+└── package.json
+```
+
+La carpeta `app/` es el corazón: cada carpeta dentro será una ruta de tu web.
+
+</Step>
+
+## Pruébalo en vivo
+
+Next.js no corre dentro del editor del navegador, así que esta vez lo pruebas en tu terminal. Sustituye el contenido de `app/page.tsx` por esto y mira cómo cambia la página:
+
+```tsx
+// app/page.tsx
+export default function Home() {
+  return (
+    <main>
+      <h1>Hola desde Next.js</h1>
+      <p>Esto sigue siendo React, solo que con superpoderes.</p>
+    </main>
+  );
+}
+```
+
+Fíjate: es un componente de función normal con `export default`. No hay `import React`, ni `ReactDOM.createRoot`, ni `index.html`. Next.js se encarga de todo eso por ti.
+
+<Tip title="Vite también tiene su lugar">
+
+Que Next.js exista no significa que Vite esté obsoleto. Si tu proyecto es una SPA sin necesidad de SEO, Vite sigue siendo una opción excelente y más ligera. Elige según el problema, no según la moda.
+
+</Tip>
+
+<Warning title="Mezclar gestores de paquetes">
+
+Si creas el proyecto con pnpm y luego usas otro gestor de paquetes por costumbre, acabarás con dos lockfiles y dependencias duplicadas. Usa **siempre pnpm** en el mismo proyecto: `pnpm add`, `pnpm install`, `pnpm dev`. Si ya mezclaste, borra `node_modules` y el lockfile sobrante, y ejecuta `pnpm install`.
+
+</Warning>
+
+## Ejercicio
+
+<Exercise criteria={["Has creado un proyecto con pnpm create next-app@latest usando TypeScript y App Router", "pnpm dev arranca y ves tu página en localhost:3000", "Has cambiado el título de app/page.tsx y has visto el cambio sin recargar", "Sabes explicar con tus palabras una diferencia entre Vite y Next.js"]} />
+
+Cambia el contenido de `app/page.tsx` para que muestre tu nombre y una lista de tres tecnologías que ya conoces.
+
+<Tip title="Solución">
+
+```tsx
+// app/page.tsx
+const tecnologias: string[] = ["React", "TypeScript", "Vite"];
+
+export default function Home() {
+  return (
+    <main>
+      <h1>Hola, soy un torpe orgulloso</h1>
+      <ul>
+        {tecnologias.map((t) => (
+          <li key={t}>{t}</li>
+        ))}
+      </ul>
+    </main>
+  );
+}
+```
+
+</Tip>
+
+## Resumen
+
+- Vite es una herramienta de build minimalista; Next.js es un framework completo sobre React.
+- Next.js destaca cuando importan el SEO y el contenido ya renderizado; Vite, en apps internas y SPAs.
+- El proyecto se crea con `pnpm create next-app@latest` y se arranca con `pnpm dev`.
+- La carpeta `app/` define las rutas, y `layout.tsx` y `page.tsx` son los archivos clave.

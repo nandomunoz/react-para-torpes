@@ -1,0 +1,130 @@
+---
+title: Composición vs herencia
+week: 2
+day: "11"
+order: 11
+objective: Reutilizar y especializar componentes mediante children, slots y genéricos en lugar de herencia.
+minutes: 40
+level: intermedio
+reading:
+  - title: Pasar props a un componente (react.dev)
+    url: https://react.dev/learn/passing-props-to-a-component
+  - title: Genéricos en TypeScript
+    url: https://www.typescriptlang.org/docs/handbook/2/generics.html
+  - title: TypeScript en React (react.dev)
+    url: https://react.dev/learn/typescript
+---
+
+## Concepto
+
+En la programación orientada a objetos clásica, cuando quieres reutilizar comportamiento, heredas: `BotonPeligro extends Boton`. Funciona hasta que tienes tres niveles de herencia y cambiar la clase base rompe media aplicación. Es como heredar la casa de la abuela con todos sus muebles: no puedes quedarte solo con la mesa.
+
+React toma otro camino: la **composición**. En vez de extender componentes, los combinas como piezas de Lego. Un componente recibe otros elementos como `children` o como props y decide dónde colocarlos. El equipo de React lo resume así: no han encontrado ningún caso donde recomienden crear jerarquías de herencia de componentes.
+
+Hay tres herramientas principales. Con `children` dejas un hueco genérico dentro del componente. Con **slots** (props que reciben JSX, como `cabecera` o `pie`) ofreces varios huecos con nombre. Y con la **especialización** creas un componente más concreto que simplemente renderiza el general con ciertas props, sin heredar nada.
+
+TypeScript añade los **genéricos**: un componente como `Lista<T>` funciona con cualquier tipo de dato y aun así mantiene los tipos de punta a punta. El tipo `ReactNode` representa todo lo que React puede renderizar y es el tipo habitual para `children` y slots.
+
+## Paso a paso
+
+<Step n={1} title="Usa children para el hueco principal">
+
+Declara `children: ReactNode` en las props y colócalo donde quieras. Quien usa el componente decide qué contiene.
+
+```tsx
+type TarjetaProps = { titulo: string; children: ReactNode };
+
+function Tarjeta({ titulo, children }: TarjetaProps) {
+  return (
+    <section>
+      <h3>{titulo}</h3>
+      {children}
+    </section>
+  );
+}
+```
+
+</Step>
+
+<Step n={2} title="Añade slots con nombre">
+
+Cuando necesitas más de un hueco, crea props de tipo `ReactNode`. Márcalas como opcionales con `?` si no siempre se usan.
+
+```tsx
+type PanelProps = {
+  cabecera: ReactNode;
+  acciones?: ReactNode;
+  children: ReactNode;
+};
+```
+
+</Step>
+
+<Step n={3} title="Especializa por composición">
+
+Para crear `AvisoError` no heredas de `Aviso`: lo usas dentro, fijando algunas props y reenviando `children`.
+
+```tsx
+function AvisoError({ children }: { children: ReactNode }) {
+  return <Aviso color="#ff4d4d">Error: {children}</Aviso>;
+}
+```
+
+</Step>
+
+<Step n={4} title="Hazlo genérico cuando el dato varía">
+
+Un parámetro de tipo `T` permite que la misma lista pinte frutas, usuarias o lo que le pases. La función `render` recibe un `T` y TypeScript lo infiere por ti.
+
+```tsx
+function Lista<T>({ items, clave, render }: ListaProps<T>) {
+  /* ... */
+}
+```
+
+</Step>
+
+## Pruébalo en vivo
+
+Revisa las cuatro técnicas en un solo archivo. Prueba a cambiar los datos de `Lista` y comprueba que TypeScript infiere el tipo del parámetro en `render`.
+
+<Playground file="dia-11/Composicion.tsx" title="Children, slots y genéricos" />
+
+## Error típico
+
+<Warning title="Pasar una prop de configuración para cada variante">
+
+Es tentador crear `Boton` con las props `tipo`, `conIcono`, `conBadge`, `izquierda`, `grande`... hasta que nadie entiende las combinaciones válidas.
+
+**Qué hacer:** deja que quien lo usa pase JSX (`children` o slots) y crea componentes especializados (`BotonPeligro`) que compongan el básico.
+
+</Warning>
+
+<Warning title="Tipar children como string o JSX.Element">
+
+Si tipas `children: string`, no podrás pasar dos elementos. Si usas `JSX.Element`, no podrás pasar texto ni `null`.
+
+**Qué hacer:** usa `ReactNode`, que acepta texto, números, elementos, arrays, fragmentos y `null`.
+
+</Warning>
+
+<Tip title="Legado">
+
+Verás código antiguo con clases que extienden `React.Component`. Esa es la única herencia que existe en React y solo sirve para definir el componente, nunca para reutilizar lógica de interfaz.
+
+</Tip>
+
+## Ejercicio
+
+<Exercise criteria={["Modal tiene las props titulo y pie (opcional) de tipo ReactNode, además de children", "El pie solo se renderiza si existe", "ModalConfirmar usa Modal por composición y rellena los slots con dos botones", "No se usa herencia ni any en ningún componente"]} />
+
+<Playground file="dia-11/Ejercicio.starter.tsx" title="Tu turno" />
+
+<Solution file="dia-11/Ejercicio.solution.tsx" />
+
+## Resumen
+
+- React prefiere composición a herencia: combinar piezas es más flexible y predecible que extender clases.
+- `children` es el hueco principal; las props `ReactNode` son slots con nombre.
+- Un componente especializado renderiza el general con props fijas, sin heredar nada.
+- Los genéricos (`Lista<T>`) permiten reutilizar lógica con cualquier tipo de dato sin perder seguridad de tipos.

@@ -1,0 +1,178 @@
+---
+title: Rutas con el App Router
+week: 5
+day: "32"
+order: 28
+objective: Crear páginas, layouts, rutas dinámicas y navegación con Link usando el App Router de Next.js.
+minutes: 40
+level: intermedio
+reading:
+  - title: Documentación del App Router
+    url: https://nextjs.org/docs/app
+  - title: Documentación de Next.js
+    url: https://nextjs.org/docs
+  - title: Rutas en React Router (para comparar)
+    url: https://reactrouter.com/start/library/installation
+---
+
+## Concepto
+
+En la semana 4 definiste tus rutas con React Router: una lista de rutas escrita a mano en el código. En Next.js el enrutado es **por sistema de archivos**: las carpetas dentro de `app/` son las URLs. Si creas `app/acerca/page.tsx`, ya existe la ruta `/acerca`. Sin configurar nada. Es como un archivador donde el nombre de la carpeta es la etiqueta.
+
+Hay dos archivos con nombre especial. `page.tsx` es lo que se muestra en esa ruta (sin él, la carpeta no es una página). `layout.tsx` es un envoltorio que se comparte entre la página y todas las rutas que cuelgan de esa carpeta: ideal para la cabecera, el menú y el pie, que no se vuelven a montar al navegar.
+
+Para rutas con partes variables, como un artículo de blog distinto por URL, usas una carpeta con corchetes: `app/blog/[slug]/page.tsx`. Entonces `/blog/hola-mundo` y `/blog/segundo-post` usan la misma página, y el valor de `slug` te llega como parámetro.
+
+Para navegar entre páginas sin recargar el navegador entero usas el componente `Link` de `next/link`, que sustituye al enlace `a` normal en la navegación interna.
+
+## Paso a paso
+
+<Step n={1} title="Crea una página nueva">
+
+```tsx
+// app/acerca/page.tsx
+export default function Acerca() {
+  return <h1>Acerca de mí</h1>;
+}
+```
+
+Visita `/acerca`. Ya está.
+
+</Step>
+
+<Step n={2} title="Añade un layout con menú">
+
+El layout raíz envuelve todo. Recibe `children`, que es la página activa:
+
+```tsx
+// app/layout.tsx
+import type { ReactNode } from "react";
+import Link from "next/link";
+
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return (
+    <html lang="es">
+      <body>
+        <nav>
+          <Link href="/">Inicio</Link> | <Link href="/acerca">Acerca</Link> |{" "}
+          <Link href="/blog">Blog</Link>
+        </nav>
+        {children}
+      </body>
+    </html>
+  );
+}
+```
+
+</Step>
+
+<Step n={3} title="Crea una ruta dinámica">
+
+En Next.js 16 los `params` llegan como una **promesa**, así que el componente es `async` y usas `await`:
+
+```tsx
+// app/blog/[slug]/page.tsx
+type Props = { params: Promise<{ slug: string }> };
+
+export default async function Articulo({ params }: Props) {
+  const { slug } = await params;
+  return <h1>Artículo: {slug}</h1>;
+}
+```
+
+</Step>
+
+<Step n={4} title="Enlaza a las rutas dinámicas">
+
+```tsx
+// app/blog/page.tsx
+import Link from "next/link";
+
+const slugs: string[] = ["hola-mundo", "mi-primer-post"];
+
+export default function Blog() {
+  return (
+    <ul>
+      {slugs.map((s) => (
+        <li key={s}>
+          <Link href={`/blog/${s}`}>{s}</Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+</Step>
+
+## Pruébalo en vivo
+
+Con `pnpm dev` en marcha, visita estas URLs y comprueba qué responde cada una:
+
+```bash
+# /            -> app/page.tsx
+# /acerca      -> app/acerca/page.tsx
+# /blog        -> app/blog/page.tsx
+# /blog/hola-mundo -> app/blog/[slug]/page.tsx con slug = hola-mundo
+```
+
+Navega con los enlaces del menú y observa que la barra de navegación no parpadea: el layout se conserva y solo cambia la página.
+
+<Warning title="Olvidar el await en params">
+
+En versiones anteriores de Next.js `params` era un objeto normal, y muchos tutoriales antiguos escriben `params.slug` directamente. En Next.js 16 `params` es una promesa: si no haces `await`, tendrás un error de TypeScript o un valor indefinido. Marca el componente como `async` y haz `const { slug } = await params`. Y recuerda: la carpeta se llama `[slug]` con corchetes, pero el parámetro es `slug`.
+
+</Warning>
+
+## Ejercicio
+
+<Exercise criteria={["Existe la ruta /acerca con su page.tsx", "El layout raíz muestra un menú con Link que aparece en todas las páginas", "La ruta /blog/[slug] muestra el slug recibido usando await params", "La página /blog lista al menos tres artículos enlazados con Link"]} />
+
+Crea la sección de blog con tres artículos de mentira y enlázalos desde `/blog`.
+
+<Tip title="Solución">
+
+```tsx
+// app/blog/page.tsx
+import Link from "next/link";
+
+const articulos = [
+  { slug: "hola-mundo", titulo: "Hola, mundo" },
+  { slug: "tipos-sin-llorar", titulo: "TypeScript sin llorar" },
+  { slug: "estado-y-cafe", titulo: "Estado y café" },
+];
+
+export default function Blog() {
+  return (
+    <main>
+      <h1>Blog</h1>
+      <ul>
+        {articulos.map((a) => (
+          <li key={a.slug}>
+            <Link href={`/blog/${a.slug}`}>{a.titulo}</Link>
+          </li>
+        ))}
+      </ul>
+    </main>
+  );
+}
+```
+
+```tsx
+// app/blog/[slug]/page.tsx
+type Props = { params: Promise<{ slug: string }> };
+
+export default async function Articulo({ params }: Props) {
+  const { slug } = await params;
+  return <h1>Leyendo: {slug}</h1>;
+}
+```
+
+</Tip>
+
+## Resumen
+
+- Las carpetas dentro de `app/` son las rutas; `page.tsx` es lo que se muestra.
+- `layout.tsx` envuelve las páginas y se conserva al navegar.
+- Las rutas dinámicas usan corchetes, como `[slug]`, y en Next.js 16 `params` es una promesa.
+- `Link` de `next/link` es la forma de navegar entre páginas internas.

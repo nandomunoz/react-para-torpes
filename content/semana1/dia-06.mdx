@@ -1,0 +1,104 @@
+---
+title: Renderizado condicional
+week: 1
+day: "6"
+order: 6
+objective: Mostrar componentes distintos según el estado, como una pantalla de login o un perfil de usuario.
+minutes: 30
+level: básico
+reading:
+  - title: Renderizado condicional
+    url: https://react.dev/learn/conditional-rendering
+  - title: Reaccionar a la entrada con estado
+    url: https://react.dev/learn/reacting-to-input-with-state
+  - title: Estrechamiento de tipos (narrowing)
+    url: https://www.typescriptlang.org/docs/handbook/2/narrowing.html
+---
+
+## Concepto
+
+Casi ninguna interfaz muestra siempre lo mismo. Si has iniciado sesión ves tu perfil; si no, ves el formulario de entrada. Es como la puerta de un club: lo que hay dentro depende de si tienes la entrada.
+
+En React no hay una sintaxis especial para esto. Usas lo que ya conoces de TypeScript: `if`, el operador ternario y el operador `&&`. Tu componente decide qué JSX devolver según el valor del estado.
+
+Aquí TypeScript brilla: si el usuario puede ser `null` (nadie ha entrado), escribes `useState` con el tipo unión `Usuario | null`. Cuando compruebas que no es `null`, el compilador sabe que dentro de esa rama el usuario existe y te deja usar sus campos sin miedo.
+
+## Paso a paso
+
+<Step n={1} title="Modela el estado con un tipo unión">
+
+Un usuario puede existir o no. Eso se escribe con una unión con `null`:
+
+```tsx
+const [usuario, setUsuario] = useState<Usuario | null>(null);
+```
+
+</Step>
+
+<Step n={2} title="Devuelve temprano con if">
+
+La forma más clara: si no hay usuario, devuelve el login y termina. El resto de la función solo se ejecuta con usuario:
+
+```tsx
+if (usuario === null) {
+  return <Login onEntrar={entrar} />;
+}
+return <Perfil usuario={usuario} onSalir={salir} />;
+```
+
+</Step>
+
+<Step n={3} title="Usa el ternario para elegir entre dos opciones">
+
+Dentro del JSX, `condicion ? opcionA : opcionB` decide qué pintar. Es ideal cuando solo cambia un trozo pequeño de la pantalla.
+
+</Step>
+
+<Step n={4} title="Usa && para mostrar algo o nada">
+
+`cuenta > 0 && <p>Hay elementos</p>` pinta el párrafo solo si la condición es verdadera. Si es falsa, no pinta nada.
+
+</Step>
+
+## Pruébalo en vivo
+
+Pulsa Entrar y Salir. Fíjate en que `App` decide qué componente devolver, y que `Perfil` recibe un usuario que TypeScript sabe que no es `null`.
+
+<Playground file="dia-06/LoginPerfil.tsx" title="Login y perfil de usuario" />
+
+## Error típico
+
+<Warning title="El 0 que aparece de la nada">
+
+Si escribes `lista.length && <Lista />` y el arreglo está vacío, React pinta un `0` en la pantalla, porque `0` es un valor válido que sí se renderiza. Escribe una comparación explícita: `lista.length > 0 && <Lista />`.
+
+</Warning>
+
+<Warning title="Acceder a un valor que puede ser null">
+
+Si escribes `usuario.nombre` sin comprobar antes que `usuario` no es `null`, TypeScript se queja con "possibly null". No lo silencies con trucos: añade la comprobación `if` o usa `usuario?.nombre`.
+
+</Warning>
+
+<Tip title="Cuándo usar cada forma">
+
+Usa `if` con retorno temprano cuando cambia toda la pantalla, el ternario cuando eliges entre dos trozos de JSX, y `&&` cuando algo aparece o no aparece.
+
+</Tip>
+
+## Ejercicio
+
+Crea un panel con tres estados posibles.
+
+<Exercise criteria={["Defines un tipo Estado con los valores cargando, error y listo","Cada estado muestra su propio mensaje usando && o un ternario","El mensaje de error usa la clase error","Tres botones cambian el estado con setEstado"]} />
+
+<Playground file="dia-06/Ejercicio.starter.tsx" title="Tu turno" />
+
+<Solution file="dia-06/Ejercicio.solution.tsx" />
+
+## Resumen
+
+- El renderizado condicional usa `if`, ternario y `&&`, sin sintaxis nueva.
+- Un tipo unión como `Usuario | null` modela estados con "nada".
+- Al comprobar `null`, TypeScript estrecha el tipo y te deja usar los campos.
+- Cuidado con `&&` y números: compara de forma explícita para evitar el `0` fantasma.

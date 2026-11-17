@@ -1,0 +1,111 @@
+---
+title: Pruebas unitarias con Vitest y Testing Library
+week: 4
+day: "25"
+order: 24
+objective: Escribir pruebas de componentes que simulan lo que hace el usuario con Vitest y React Testing Library.
+minutes: 50
+level: intermedio
+reading:
+  - title: Guía de Vitest
+    url: https://vitest.dev/guide/
+  - title: Introducción a React Testing Library
+    url: https://testing-library.com/docs/react-testing-library/intro/
+---
+
+## Concepto
+
+Probar tu código a mano es como revisar que cierraste la puerta volviendo a casa cada vez que sales. Las pruebas automáticas hacen esa comprobación por ti, en segundos, cada vez que cambias algo. Es el seguro que te deja refactorizar sin sudores fríos.
+
+Para React usamos dos herramientas. **Vitest** es el ejecutor de pruebas: encuentra los archivos `.test.tsx`, los corre y te dice qué pasó (es rápido y comparte configuración con Vite). **React Testing Library** renderiza tus componentes en un DOM simulado (jsdom) y te da utilidades para buscar elementos *como lo haría una persona*: por su rol, su texto o su etiqueta.
+
+Esa es la filosofía clave: no pruebes detalles internos (el nombre de un estado, una función privada), prueba lo que el usuario ve y hace. Si mañana cambias `useState` por `useReducer` y el comportamiento es el mismo, tus tests deben seguir en verde.
+
+Para simular acciones usamos `@testing-library/user-event`, que imita interacciones reales (clics, escritura con teclado) mucho mejor que los eventos sintéticos básicos. Y para las aserciones, `@testing-library/jest-dom` añade comprobaciones legibles como `toBeInTheDocument` o `toBeDisabled`.
+
+## Paso a paso
+
+<Step n={1} title="Prepara el entorno">
+
+En un proyecto Vite real instalas las herramientas como dependencias de desarrollo:
+
+```bash
+pnpm add -D vitest jsdom @testing-library/react @testing-library/user-event @testing-library/jest-dom
+```
+
+En `vite.config.ts` activas el entorno de navegador simulado con `test: { environment: "jsdom", globals: true }` y un archivo de setup que importe `@testing-library/jest-dom/vitest`. Después ejecutas `pnpm test`.
+
+</Step>
+
+<Step n={2} title="Escribe el primer test: renderizar y buscar">
+
+Un test tiene tres partes: preparar (`render`), actuar y comprobar. Busca con `screen.getByRole`, `getByText` o `getByLabelText`, en ese orden de preferencia.
+
+</Step>
+
+<Step n={3} title="Simula al usuario con user-event">
+
+Crea el usuario con `userEvent.setup()` y recuerda que sus acciones son asíncronas: usa `await user.click(...)` y `await user.type(...)`.
+
+</Step>
+
+<Step n={4} title="Comprueba el resultado">
+
+Usa `expect(...)` con las aserciones de jest-dom. Para ver que algo no existe, usa `queryBy...` (devuelve `null` en lugar de lanzar error) junto con `not.toBeInTheDocument()`.
+
+</Step>
+
+<Step n={5} title="Ejecuta y repite">
+
+Con `pnpm test` corres todo una vez; con `pnpm vitest` te quedas en modo vigilancia y se relanza al guardar. Un buen hábito: escribe el test, míralo fallar, y entonces haz que pase.
+
+</Step>
+
+## Pruébalo en vivo
+
+Este es el componente que vamos a probar. El editor sirve para ver cómo se comporta, pero los tests no corren en el navegador: viven en un archivo aparte que se ejecuta con Vitest.
+
+<Playground file="dia-25/Contador.tsx" title="El componente a probar" />
+
+Y estos son sus tests reales, los mismos que se ejecutan en el repositorio del curso con `pnpm --filter examples test`:
+
+<Snippet file="dia-25/Contador.test.tsx" />
+
+Fíjate en que cada test es independiente, usa roles accesibles (`button` con su nombre) y comprueba texto visible, no variables internas.
+
+## Error típico
+
+<Warning title="Olvidar el await con user-event">
+
+Las acciones de `user-event` devuelven promesas. Si escribes `user.click(boton)` sin `await`, el test comprueba el resultado antes de que el clic se procese y falla de forma misteriosa (o peor, pasa a veces). Cada interacción lleva `await`, y el test debe ser `async`.
+
+</Warning>
+
+<Warning title="Buscar por clases CSS o probar la implementación">
+
+Buscar con `querySelector(".boton-rojo")` o comprobar el valor de un estado interno hace tus tests frágiles: se rompen al refactorizar aunque nada haya cambiado para el usuario. Prefiere `getByRole` y `getByLabelText`; además te empujan a escribir HTML accesible.
+
+</Warning>
+
+<Tip title="Qué probar">
+
+Prueba el comportamiento importante: lo que ocurre al interactuar, los casos límite (máximos, listas vacías) y los mensajes de error. No necesitas probar que React funciona.
+
+</Tip>
+
+## Ejercicio
+
+Lee el componente `Saludo` del editor y escribe sus tests en un archivo `Saludo.test.tsx` dentro de un proyecto con Vitest configurado. Cuando termines, compara con la solución.
+
+<Exercise criteria={["Test: sin texto se ve el mensaje inicial","Test: al escribir un nombre aparece el saludo","Test: al borrar el campo vuelve el mensaje inicial","Usar getByLabelText y user-event con await"]} />
+
+<Playground file="dia-25/Ejercicio.starter.tsx" title="Tu turno" />
+
+<Solution file="dia-25/Ejercicio.solution.test.tsx" />
+
+## Resumen
+
+- Vitest ejecuta las pruebas y Testing Library renderiza y consulta los componentes como lo haría un usuario.
+- Prefiere `getByRole` y `getByLabelText`; evita probar detalles internos.
+- `user-event` simula interacciones reales y siempre se usa con `await`.
+- Un buen test es independiente, legible y falla por una sola razón.

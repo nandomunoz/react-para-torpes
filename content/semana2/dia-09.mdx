@@ -1,0 +1,125 @@
+---
+title: Formularios complejos y validación
+week: 2
+day: "9"
+order: 9
+objective: Construir un formulario con varios tipos de input, estado tipado y mensajes de error de validación.
+minutes: 45
+level: intermedio
+reading:
+  - title: Reaccionar a la entrada con estado (react.dev)
+    url: https://react.dev/learn/reacting-to-input-with-state
+  - title: Elegir la estructura del estado (react.dev)
+    url: https://react.dev/learn/choosing-the-state-structure
+  - title: Narrowing en TypeScript
+    url: https://www.typescriptlang.org/docs/handbook/2/narrowing.html
+---
+
+## Concepto
+
+Un formulario es una conversación con el usuario, y como toda conversación puede salir mal: nombres vacíos, emails inventados, edades de 400 años. Tu trabajo es recoger los datos, comprobarlos y decir qué falló sin hacer sentir mal a nadie.
+
+En React lo habitual es usar **componentes controlados**: el valor de cada input vive en el estado y se pasa con `value` (o `checked`), y cada cambio actualiza ese estado con `onChange`. Así el estado es la única fuente de verdad y puedes validar, limpiar o precargar el formulario cuando quieras.
+
+Con formularios grandes, un `useState` por campo se vuelve pesado. Una solución cómoda es un solo objeto de estado con un tipo (`Datos`) y un manejador de cambios compartido que usa el atributo `name` del input. Los errores se guardan igual: un objeto donde cada campo puede tener su mensaje, algo que TypeScript expresa muy bien con `Partial<Record<keyof Datos, string>>`.
+
+Detalle de TypeScript: los inputs siempre devuelven texto, incluso los de tipo `number`. Guarda el valor como `string` en el estado y conviértelo con `Number()` solo al validar o enviar.
+
+## Paso a paso
+
+<Step n={1} title="Tipa los datos y los errores">
+
+El tipo `Datos` describe todos los campos. Para los valores con opciones cerradas, como el rol, usa una unión de literales en lugar de `string`.
+
+```tsx
+type Rol = "estudiante" | "profesional" | "otro";
+type Errores = Partial<Record<keyof Datos, string>>;
+```
+
+</Step>
+
+<Step n={2} title="Un manejador para todos los campos">
+
+El evento de un input, un select o un textarea comparte `name` y `value`. Tipa el evento con una unión y actualiza el campo correspondiente.
+
+```tsx
+function cambiar(
+  e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+) {
+  const { name, value } = e.target;
+  setDatos({ ...datos, [name]: value });
+}
+```
+
+</Step>
+
+<Step n={3} title="Casillas y radios">
+
+Un checkbox usa `checked` en lugar de `value`. Para distinguirlo, comprueba el `type` y estrecha el tipo con `instanceof HTMLInputElement`. Los radios comparten `name` y marcas el activo con `checked={datos.genero === opcion}`.
+
+</Step>
+
+<Step n={4} title="Escribe una función de validación pura">
+
+Recibe los datos y devuelve el objeto de errores. Al ser una función pura, es fácil de leer y de probar.
+
+```tsx
+function validar(d: Datos): Errores {
+  const errores: Errores = {};
+  if (d.nombre.trim().length < 2) errores.nombre = "Mínimo 2 caracteres";
+  return errores;
+}
+```
+
+</Step>
+
+<Step n={5} title="Valida al enviar">
+
+En el `onSubmit` llama a `e.preventDefault()`, valida y guarda los errores. Solo si el objeto está vacío, continúa con el envío. El atributo `noValidate` en el form evita que el navegador muestre sus propios mensajes.
+
+</Step>
+
+## Pruébalo en vivo
+
+Envía el formulario vacío para ver los errores y luego rellénalo bien. Observa cómo un único `cambiar` sirve para texto, select, radios, textarea y checkbox.
+
+<Playground file="dia-09/FormularioRegistro.tsx" title="Formulario de registro" />
+
+## Error típico
+
+<Warning title="Input que pasa de no controlado a controlado">
+
+Si inicias un campo con `undefined` (por ejemplo, un `useState<string>()` sin valor) y luego le das un texto, React se queja de que el input cambió de no controlado a controlado.
+
+**Qué hacer:** inicializa siempre cada campo con un valor definido, como `""` para textos y `false` para casillas.
+
+</Warning>
+
+<Warning title="Olvidar e.preventDefault() en el submit">
+
+Sin él, el navegador recarga la página al enviar y pierdes todo el estado en un parpadeo.
+
+**Qué hacer:** llama a `e.preventDefault()` como primera línea del manejador de `onSubmit`, y tipa el evento como `FormEvent<HTMLFormElement>`.
+
+</Warning>
+
+<Tip title="Validar mientras escribes">
+
+Para una experiencia más fina, puedes llamar a `validar` en cada cambio, pero muestra los errores solo de los campos que el usuario ya tocó. Nadie quiere ver un error rojo antes de escribir la primera letra.
+
+</Tip>
+
+## Ejercicio
+
+<Exercise criteria={["Los tres campos (nombre, email y mensaje) son controlados y están tipados con el tipo Contacto", "validar devuelve un error para nombre corto, email inválido y mensaje de menos de 10 caracteres", "Los errores aparecen bajo cada campo con className error", "Al enviar con datos válidos se muestra el mensaje de éxito y se limpia el formulario"]} />
+
+<Playground file="dia-09/Ejercicio.starter.tsx" title="Tu turno" />
+
+<Solution file="dia-09/Ejercicio.solution.tsx" />
+
+## Resumen
+
+- Un input controlado lee su valor del estado (`value` o `checked`) y lo actualiza en `onChange`.
+- Un objeto de estado tipado y un manejador basado en `name` evitan decenas de `useState`.
+- La validación es una función pura que devuelve un objeto de errores; se ejecuta al enviar.
+- Los inputs devuelven siempre texto: convierte a número solo cuando lo necesites.

@@ -1,0 +1,149 @@
+---
+title: Proyecto final, biblioteca CRUD
+week: 4
+day: "28-30"
+order: 26
+objective: Construir una app CRUD completa con rutas, estado global, API simulada, estados de carga y error, y validación de formularios.
+minutes: 180
+level: avanzado
+reading:
+  - title: React Router, instalación en modo librería
+    url: https://reactrouter.com/start/library/installation
+  - title: Escalar con reducer y contexto
+    url: https://react.dev/learn/scaling-up-with-reducer-and-context
+  - title: Guía de Vite
+    url: https://vite.dev/guide/
+  - title: Tipado con TypeScript en React
+    url: https://react.dev/learn/typescript
+---
+
+## Concepto
+
+Llegó el momento de juntarlo todo. Durante cuatro semanas has ido recogiendo piezas sueltas, como quien colecciona cromos: componentes, estado, efectos, rutas, tipos. El proyecto final es el álbum completo. Vas a construir una **biblioteca personal** donde puedes crear, ver, editar, marcar como leído y borrar libros. Es decir, un CRUD (Create, Read, Update, Delete) de verdad.
+
+Para que funcione sin internet y sin servidor, la API es **simulada**: son funciones `async` que esperan medio segundo con `setTimeout` y guardan los datos en una variable en memoria. Desde el punto de vista de React se comporta como una API real: tarda, puede fallar (hay una casilla para forzar fallos) y devuelve promesas. El día que la cambies por `fetch` a un backend, solo tocarás el objeto `api`.
+
+La arquitectura tiene capas, y eso es lo que más conviene que te lleves. Los **tipos** describen los datos. La **API** habla con el "servidor". Un **reducer** con contexto guarda el estado global con una unión discriminada (`loading`, `error`, `ready`). Los **formularios** validan antes de enviar. Y las **páginas** conectan todo con React Router. Cada capa se puede cambiar sin romper las demás.
+
+Usamos `useReducer` y contexto en vez de Redux Toolkit porque el estado es pequeño y así no necesitas dependencias. Si prefieres practicar el día 23, sustituir el reducer por un slice es un buen reto extra: las acciones tienen exactamente la misma forma.
+
+## Paso a paso
+
+<Step n={1} title="Define los tipos y la API simulada">
+
+Empieza por los datos: `LibroForm` (lo que escribe el usuario) y `Libro` (lo que guarda la API, con `id` y `leido`). Después, la API: una función auxiliar `simular` que espera, lanza un error si está activada la casilla de fallos y, si no, ejecuta la acción sobre el array en memoria. Todos los métodos (`listar`, `crear`, `actualizar`, `borrar`) pasan por ella.
+
+</Step>
+
+<Step n={2} title="Modela el estado global con un reducer">
+
+El estado es una unión discriminada: `loading`, `error` con su mensaje, o `ready` con la lista. Las acciones (`cargado`, `agregado`, `actualizado`, `borrado`...) describen qué pasó. Un `switch` exhaustivo garantiza que TypeScript te avise si olvidas un caso.
+
+</Step>
+
+<Step n={3} title="Comparte el estado con un Provider">
+
+`BibliotecaProvider` carga los datos en un efecto (con bandera de cancelado para tolerar StrictMode) y expone por contexto el estado y las operaciones. El hook `useBiblioteca` lanza un error claro si se usa fuera del provider, así no tendrás un `null` inesperado.
+
+</Step>
+
+<Step n={4} title="Construye el formulario con validación">
+
+Un único componente `Formulario` sirve para crear y editar. Valida al enviar: título de al menos 3 caracteres y autor obligatorio. Si hay errores, los muestra bajo cada campo y no llama a la API. Si la API falla, muestra el error y deja al usuario reintentar. Mientras guarda, desactiva el botón.
+
+</Step>
+
+<Step n={5} title="Conecta las páginas con las rutas">
+
+Tres rutas: la lista en `/`, el alta en `/nuevo` y la edición en `/editar/:id` (con `useParams` tipado), más un 404. El componente `Estados` centraliza la pintura de `loading` y `error` con su botón de reintentar, para no repetirla en cada página.
+
+</Step>
+
+## Pruébalo en vivo
+
+Explora la app completa: crea un libro con el formulario vacío (verás la validación), edita otro, bórralo y activa "Simular fallos" para ver los estados de error. Luego lee el código de arriba abajo; está organizado en secciones numeradas.
+
+<Playground file="dia-28/Biblioteca.tsx" title="Biblioteca CRUD" height={560} dependencies={{"react-router":"^7.9.0"}} />
+
+## Cómo llevarlo a un proyecto Vite real
+
+En el editor todo vive en un archivo para que puedas leerlo de golpe. En un proyecto real lo separarías por responsabilidades:
+
+```bash
+pnpm create vite@latest biblioteca --template react-ts
+cd biblioteca
+pnpm add react-router
+pnpm install
+pnpm dev
+```
+
+Una estructura razonable sería:
+
+```bash
+src/
+  main.tsx                # BrowserRouter + createRoot
+  App.tsx                 # Routes
+  types.ts                # Libro, LibroForm
+  api/libros.ts           # la API simulada (o fetch real)
+  state/BibliotecaContext.tsx   # reducer, provider y useBiblioteca
+  components/Formulario.tsx
+  components/Estados.tsx
+  pages/ListaLibros.tsx
+  pages/PaginaNuevo.tsx
+  pages/PaginaEditar.tsx
+```
+
+Al sacarlo a `main.tsx`, cambia `MemoryRouter` por `BrowserRouter`. Si quieres añadir pruebas, instala Vitest con `pnpm add -D vitest jsdom @testing-library/react @testing-library/user-event @testing-library/jest-dom`, y para cargar páginas bajo demanda usa `lazy` y `Suspense` en cada ruta.
+
+## Checklist de entrega
+
+Antes de dar el proyecto por terminado, repasa esta lista:
+
+- Todo el código está en TypeScript estricto, sin `any`.
+- Hay rutas para listar, crear, editar y una ruta 404.
+- La lista muestra estados de carga y de error, con botón de reintentar.
+- El formulario valida y muestra mensajes bajo cada campo.
+- Crear, editar, marcar y borrar funcionan, y los fallos de la API se muestran sin romper la app.
+- Los efectos limpian lo que abren (cancelación al desmontar) y toleran StrictMode.
+- No hay estado duplicado: lo derivado se calcula.
+- Las listas usan `key` con el id del dato.
+- Al menos un par de tests de componentes o del reducer.
+- El proyecto arranca con `pnpm install` y `pnpm dev`, y el README explica cómo.
+
+## Error típico
+
+<Warning title="Guardar en el estado datos que no existen todavía">
+
+Un error muy común en la edición: leer el libro de la lista antes de que haya cargado. Si abres `/editar/1` directamente, la lista aún está en `loading` y `find` no encuentra nada. Por eso la página de edición se apoya en `Estados`: solo busca el libro cuando el estado es `ready`, y avisa si el id no existe.
+
+</Warning>
+
+<Warning title="Dejar el botón activo mientras se guarda">
+
+Si no desactivas el botón durante el envío, un doble clic crea dos libros. Usa un estado `guardando` y desactiva el botón. Lo mismo vale para los botones de la lista: el ejemplo usa `ocupado` para bloquear la fila afectada.
+
+</Warning>
+
+<Tip title="Retos extra">
+
+Añade un buscador y un filtro de leídos (estado derivado), persiste en `localStorage`, cambia el reducer por un slice de Redux Toolkit o sustituye la API simulada por `fetch` a un backend de pruebas.
+
+</Tip>
+
+## Ejercicio
+
+Antes de lanzarte con la biblioteca completa, practica el ciclo CRUD en pequeño: una lista de tareas con API simulada. Ya tienes la API hecha; implementa la creación con validación, el borrado y la gestión del error.
+
+<Exercise criteria={["Validar que el texto tenga al menos 3 letras y mostrar el error","Crear una tarea con api.crear y añadirla al estado","Capturar el error de la API (escribe fallo para provocarlo) y mostrarlo","Borrar una tarea con api.borrar y quitarla del estado","Limpiar el campo tras crear con éxito"]} />
+
+<Playground file="dia-28/Ejercicio.starter.tsx" title="Tu turno" />
+
+<Solution file="dia-28/Ejercicio.solution.tsx" />
+
+## Resumen
+
+- Un CRUD completo se organiza en capas: tipos, API, estado global, formularios y páginas.
+- Una API simulada con `async` y `setTimeout` te deja practicar carga, errores y reintentos sin servidor.
+- Modela el estado asíncrono con uniones discriminadas y centraliza su pintado en un componente.
+- Valida antes de enviar, desactiva botones mientras guardas y muestra siempre los fallos al usuario.
+- ¡Terminaste el curso! Ahora toca construir cosas tuyas, equivocarte y volver a leer la documentación.

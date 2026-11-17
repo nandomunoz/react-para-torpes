@@ -1,0 +1,126 @@
+---
+title: React Router v7 con TypeScript
+week: 4
+day: "22"
+order: 21
+objective: Navegar entre páginas con React Router v7 en modo librería, con rutas anidadas y parámetros tipados.
+minutes: 45
+level: intermedio
+reading:
+  - title: React Router, instalación en modo librería
+    url: https://reactrouter.com/start/library/installation
+  - title: Tipado con TypeScript en React
+    url: https://react.dev/learn/typescript
+---
+
+## Concepto
+
+Hasta ahora tu app era una casa de una sola habitación: todo pasaba en la misma pantalla. React Router convierte esa casa en un edificio con pasillos: cada URL muestra un componente distinto, y navegar es cambiar de habitación sin que el navegador recargue la página entera.
+
+React Router v7 tiene varios modos de uso. Aquí usamos el **modo librería** (library mode): tú declaras las rutas con componentes, igual que declaras el resto de la interfaz. Desde la v7 todo se importa de un único paquete: `import { Routes, Route, Link } from "react-router"` (adiós a `react-router-dom`).
+
+Las piezas básicas son pocas. `Routes` y `Route` dicen qué componente se pinta para cada ruta. `Link` y `NavLink` crean enlaces que no recargan la página. `useParams` lee partes variables de la URL, como el `:id` de `/productos/3`. Y `Outlet` marca el hueco donde se pinta la ruta hija dentro de un layout compartido.
+
+Un detalle importante: en un navegador real usarías `BrowserRouter`, que lee la URL de verdad. En los ejemplos de este curso usamos `MemoryRouter`, que guarda la ruta en memoria. Funciona igual de cara a tus componentes, pero no depende de URLs reales (que el editor en vivo no soporta).
+
+## Paso a paso
+
+<Step n={1} title="Instala y envuelve la app con un router">
+
+En un proyecto Vite real instalas el paquete y envuelves la app en `BrowserRouter`:
+
+```bash
+pnpm add react-router
+```
+
+```tsx
+import { BrowserRouter } from "react-router";
+
+// En main.tsx: BrowserRouter envuelve a toda la app
+// <BrowserRouter><App /></BrowserRouter>
+```
+
+En el editor de abajo usamos `MemoryRouter` con la misma API.
+
+</Step>
+
+<Step n={2} title="Declara las rutas">
+
+Cada `Route` une un `path` con un `element`. La ruta `*` atrapa todo lo que no coincide y sirve de 404:
+
+```tsx
+<Routes>
+  <Route path="/" element={<Inicio />} />
+  <Route path="/productos" element={<Productos />} />
+  <Route path="*" element={<NoEncontrada />} />
+</Routes>
+```
+
+</Step>
+
+<Step n={3} title="Anida rutas con un layout y Outlet">
+
+Si varias páginas comparten la barra de navegación, crea una ruta padre con un `element` de layout. Las rutas hijas se pintan donde pongas `Outlet`. La ruta `index` es la que se muestra en la ruta del padre.
+
+</Step>
+
+<Step n={4} title="Lee parámetros con useParams tipado">
+
+Un path como `productos/:id` captura el valor en `id`. Los parámetros llegan siempre como `string | undefined`, así que tipa el genérico y comprueba que existan:
+
+```tsx
+const { id } = useParams<{ id: string }>();
+const producto = PRODUCTOS.find((p) => p.id === id);
+if (!producto) return <p>No existe</p>;
+```
+
+</Step>
+
+<Step n={5} title="Navega con Link y NavLink">
+
+Usa `Link` en vez de la etiqueta `a` para no recargar. `NavLink` además sabe si su ruta está activa: su `style` o `className` pueden ser una función que recibe `isActive`.
+
+</Step>
+
+## Pruébalo en vivo
+
+Navega por la tienda, abre un producto y prueba escribiendo una ruta que no existe en el código. Fíjate en cómo el layout (la barra) nunca desaparece mientras cambia el contenido.
+
+<Playground file="dia-22/Rutas.tsx" title="Rutas anidadas y parámetros" dependencies={{"react-router":"^7.9.0"}} />
+
+## Error típico
+
+<Warning title="Importar de react-router-dom o usar href">
+
+Muchos tutoriales antiguos importan de `react-router-dom`. En la v7 el paquete correcto es `react-router`; instalar el otro te da versiones viejas y confusión.
+
+Otro clásico: usar la etiqueta `a` con `href` para navegar dentro de tu app. Eso provoca una recarga completa y pierdes todo el estado de React. Dentro de tu app, siempre `Link` o `NavLink`.
+
+</Warning>
+
+<Warning title="Olvidar el caso del parámetro inexistente">
+
+`useParams` no sabe si el producto existe: solo te da el texto de la URL. Si alguien escribe `/productos/999`, tu `find` devuelve `undefined`. Comprueba siempre y muestra un mensaje en lugar de dejar que la app explote.
+
+</Warning>
+
+<Tip title="Rutas relativas">
+
+Dentro de una ruta anidada, un `to` sin barra inicial es relativo a la ruta actual. Con `to="/productos"` (con barra) siempre apuntas a la raíz, vengas de donde vengas.
+
+</Tip>
+
+## Ejercicio
+
+<Exercise criteria={["Un Link por usuario que apunta a /usuarios/:id","Una ruta /usuarios/:id con useParams tipado","Mensaje de error si el usuario no existe","Una ruta comodín que muestra un 404"]} />
+
+<Playground file="dia-22/Ejercicio.starter.tsx" title="Tu turno" dependencies={{"react-router":"^7.9.0"}} />
+
+<Solution file="dia-22/Ejercicio.solution.tsx" />
+
+## Resumen
+
+- En v7 todo se importa de `react-router`; en modo librería declaras rutas con `Routes` y `Route`.
+- `Link` y `NavLink` navegan sin recargar; `Outlet` pinta la ruta hija dentro de un layout.
+- `useParams` devuelve texto opcional: tipa el genérico y valida que el dato exista.
+- `MemoryRouter` sirve para ejemplos y tests; en producción usa `BrowserRouter`.
