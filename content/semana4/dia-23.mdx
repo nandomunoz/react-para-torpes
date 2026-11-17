@@ -1,0 +1,124 @@
+---
+title: Redux Toolkit con TypeScript
+week: 4
+day: "23"
+order: 22
+objective: Gestionar estado global con Redux Toolkit usando slices, store y hooks tipados.
+minutes: 50
+level: avanzado
+reading:
+  - title: Redux Toolkit, guía rápida
+    url: https://redux-toolkit.js.org/tutorials/quick-start
+  - title: Extraer la lógica de estado a un reducer
+    url: https://react.dev/learn/extracting-state-logic-into-a-reducer
+  - title: Tipado con TypeScript en React
+    url: https://react.dev/learn/typescript
+---
+
+## Concepto
+
+Imagina una oficina donde cada empleado guarda sus papeles en su propio cajón (el `useState` de cada componente). Funciona hasta que veinte personas necesitan el mismo documento. Redux es el archivador central de la oficina: un único lugar con el estado compartido, y un procedimiento claro para modificarlo.
+
+El procedimiento es siempre el mismo: un componente no toca el archivador, sino que **envía una acción** ("añade este producto") mediante `dispatch`. El **reducer** recibe el estado actual y la acción, y decide el nuevo estado. Así sabes siempre quién cambió qué, y por qué.
+
+Redux a secas era verboso. **Redux Toolkit** (RTK) es la forma oficial y moderna de usarlo: `createSlice` te genera acciones y reducer a la vez, y `configureStore` monta el store con buenas herramientas por defecto. Además usa Immer, así que dentro de un reducer puedes escribir `state.items.push(...)` y por debajo se crea un estado nuevo inmutable.
+
+¿Cuándo usarlo? No para todo. Para estado local, `useState`. Para compartir poco, contexto. Redux compensa cuando mucho estado lo comparten muchas partes de la app y quieres trazabilidad.
+
+## Paso a paso
+
+<Step n={1} title="Instala los paquetes">
+
+```bash
+pnpm add @reduxjs/toolkit react-redux
+```
+
+</Step>
+
+<Step n={2} title="Crea un slice tipado">
+
+`createSlice` recibe el nombre, el estado inicial y los reducers. El tipo del payload se declara con `PayloadAction`:
+
+```tsx
+const carritoSlice = createSlice({
+  name: "carrito",
+  initialState,
+  reducers: {
+    quitar(state, action: PayloadAction<number>) {
+      state.items = state.items.filter((i) => i.id !== action.payload);
+    },
+  },
+});
+```
+
+</Step>
+
+<Step n={3} title="Configura el store y deriva sus tipos">
+
+No escribas los tipos a mano: deja que TypeScript los deduzca del propio store.
+
+```tsx
+const store = configureStore({ reducer: { carrito: carritoSlice.reducer } });
+type RootState = ReturnType<typeof store.getState>;
+type AppDispatch = typeof store.dispatch;
+```
+
+</Step>
+
+<Step n={4} title="Crea hooks tipados">
+
+Los hooks genéricos de react-redux no conocen tu `RootState`. Crea versiones tipadas una vez y úsalas siempre:
+
+```tsx
+const useAppDispatch = useDispatch.withTypes<AppDispatch>();
+const useAppSelector = useSelector.withTypes<RootState>();
+```
+
+</Step>
+
+<Step n={5} title="Provee el store y úsalo en los componentes">
+
+Envuelve la app en `Provider` con tu store. Después, `useAppSelector` lee datos y `useAppDispatch` envía acciones. Procura que cada selector devuelva lo mínimo necesario: así el componente solo se re-renderiza cuando eso cambia.
+
+</Step>
+
+## Pruébalo en vivo
+
+Todo está en un archivo para que lo veas de arriba abajo: slice, store, hooks y componentes. En un proyecto real lo separarías en `store.ts`, `hooks.ts` y `carritoSlice.ts`.
+
+<Playground file="dia-23/Tienda.tsx" title="Carrito con Redux Toolkit" dependencies={{"@reduxjs/toolkit":"^2.9.0","react-redux":"^9.2.0"}} />
+
+## Error típico
+
+<Warning title="Mutar el estado fuera de un reducer">
+
+Dentro de `createSlice` puedes "mutar" gracias a Immer. Fuera de un reducer, no: si haces `items.push(...)` sobre datos que sacaste con `useAppSelector`, rompes la inmutabilidad y la pantalla no se actualiza (o RTK lanza un error en desarrollo). Para cambiar el estado, siempre `dispatch`.
+
+</Warning>
+
+<Warning title="Usar useSelector y useDispatch sin tipar">
+
+Si usas los hooks genéricos, `state` será `unknown` y perderás el autocompletado. Define `useAppSelector` y `useAppDispatch` una vez y no importes los otros en tus componentes.
+
+</Warning>
+
+<Tip title="No guardes todo en Redux">
+
+El texto de un input mientras escribes casi nunca necesita ir al store. Guarda en Redux lo compartido y deja el estado efímero en `useState`.
+
+</Tip>
+
+## Ejercicio
+
+<Exercise criteria={["Reducer alternar que invierte el campo hecha de una tarea","Reducer borrarHechas que elimina las completadas","Hooks tipados con withTypes","Las tareas hechas se muestran tachadas al hacer clic"]} />
+
+<Playground file="dia-23/Ejercicio.starter.tsx" title="Tu turno" dependencies={{"@reduxjs/toolkit":"^2.9.0","react-redux":"^9.2.0"}} />
+
+<Solution file="dia-23/Ejercicio.solution.tsx" />
+
+## Resumen
+
+- Redux Toolkit centraliza el estado: los componentes envían acciones y los reducers calculan el nuevo estado.
+- `createSlice` genera acciones y reducer; `configureStore` crea el store.
+- Deriva `RootState` y `AppDispatch` del store y crea hooks tipados con `withTypes`.
+- Úsalo para estado compartido y complejo, no para todo.

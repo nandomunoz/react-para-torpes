@@ -1,0 +1,133 @@
+---
+title: Mejores prácticas y optimización
+week: 4
+day: "26-27"
+order: 25
+objective: Optimizar con criterio usando memo, useCallback, useMemo y lazy, y evitar optimizaciones prematuras.
+minutes: 70
+level: avanzado
+reading:
+  - title: React.memo
+    url: https://react.dev/reference/react/memo
+  - title: useCallback
+    url: https://react.dev/reference/react/useCallback
+  - title: useMemo
+    url: https://react.dev/reference/react/useMemo
+  - title: lazy
+    url: https://react.dev/reference/react/lazy
+---
+
+## Concepto
+
+Optimizar sin medir es como adelgazar sin pesarte: igual haces mucho esfuerzo y no cambia nada. La primera regla de este día es la más importante: **mide antes de optimizar**. React ya es rápido por defecto; la mayoría de las apps no necesitan ninguna de las herramientas de hoy.
+
+Dicho esto, hay que entender cómo funciona el render. Cuando un componente cambia su estado, React vuelve a ejecutar ese componente **y todos sus hijos**, aunque sus props no hayan cambiado. Casi siempre es barato. Cuando no lo es (una lista enorme, un cálculo pesado), entran tres herramientas. `memo` evita re-renderizar un componente si sus props son iguales. `useCallback` mantiene la misma referencia de una función entre renders. `useMemo` guarda el resultado de un cálculo mientras no cambien sus dependencias.
+
+Aquí viene la trampa: estas piezas trabajan en equipo. Si pasas a un hijo con `memo` una función nueva en cada render, la comparación de props siempre dice "han cambiado" y el `memo` no sirve de nada. Por eso `useCallback` y `memo` suelen ir juntos, y por eso ponerlos "por si acaso" solo añade ruido y complejidad.
+
+La otra gran mejora es **no cargar lo que aún no se usa**. Con `React.lazy` y `Suspense` divides tu app en trozos que se descargan bajo demanda: la pantalla de administración no tiene por qué viajar al navegador de quien solo mira el inicio.
+
+## Paso a paso
+
+<Step n={1} title="Mide primero">
+
+Abre las React DevTools, pestaña Profiler, graba una interacción y mira qué componentes se renderizan y cuánto tardan. Si nada tarda de forma notable, para ahí: no hay nada que optimizar. Si algo sí, ya sabes dónde actuar.
+
+</Step>
+
+<Step n={2} title="Calcula en lugar de guardar (estado derivado)">
+
+Antes de optimizar, simplifica. Si un dato se puede calcular a partir de otro estado, no lo guardes en un segundo `useState` ni lo sincrones con un efecto:
+
+```tsx
+const [tareas, setTareas] = useState<Tarea[]>([]);
+// Derivado: se calcula en cada render, siempre coherente
+const pendientes = tareas.filter((t) => !t.hecha);
+```
+
+</Step>
+
+<Step n={3} title="Usa keys estables en las listas">
+
+La `key` ayuda a React a identificar cada elemento entre renders. Usa un id único y estable del dato. Nunca el índice del array si la lista se puede reordenar, filtrar o borrar: React reutilizaría el componente equivocado y mezclarías estados entre filas.
+
+</Step>
+
+<Step n={4} title="Aplica memo, useCallback y useMemo donde duela">
+
+Envuelve con `memo` el componente hijo costoso, estabiliza con `useCallback` las funciones que le pasas, y usa `useMemo` para cálculos caros o para mantener estable una referencia (un array o un objeto) que viaja como prop. En el ejemplo de abajo verás los contadores de renders para comprobarlo.
+
+</Step>
+
+<Step n={5} title="Carga bajo demanda con lazy y Suspense">
+
+`lazy` recibe una función que devuelve un `import()` dinámico; `Suspense` muestra un `fallback` mientras llega el código:
+
+```tsx
+const Admin = lazy(() => import("./Admin"));
+
+// <Suspense fallback={<p>Cargando...</p>}><Admin /></Suspense>
+```
+
+Un buen lugar para dividir son las rutas: cada página, su propio trozo.
+
+</Step>
+
+## Pruébalo en vivo
+
+Pulsa "Re-renderizar padre" y mira los contadores: la lista sin `memo` se vuelve a pintar entera; la lista con `memo` y `useCallback` se queda quieta. Prueba también a filtrar y a borrar.
+
+<Playground file="dia-26/Memo.tsx" title="memo, useCallback y useMemo" />
+
+Ahora el código bajo demanda. En un proyecto real el `import()` descargaría un archivo aparte; aquí lo simulamos con un retraso para que veas el `fallback`.
+
+<Playground file="dia-26/Lazy.tsx" title="lazy y Suspense" />
+
+## Error típico
+
+<Warning title="Poner memo, useCallback y useMemo en todas partes">
+
+Cada una de estas herramientas tiene un coste: memoria, comparaciones en cada render y código más difícil de leer. Si el componente es barato, el `memo` cuesta más de lo que ahorra. Aplícalas solo cuando hayas medido un problema real, y comprueba después que mejoró.
+
+</Warning>
+
+<Warning title="memo roto por una prop inestable">
+
+Si a un hijo con `memo` le pasas una función creada en el render, un objeto literal o un array nuevo, cambia en cada render y el `memo` nunca se salta nada. Estabiliza esas props con `useCallback` o `useMemo`, o muévelas fuera del componente si no dependen de nada.
+
+</Warning>
+
+<Warning title="Usar el índice como key">
+
+Con `key={index}`, si borras el primer elemento de una lista, todos los demás cambian de índice y React reaprovecha las filas equivocadas: inputs que conservan texto ajeno, estados cruzados. Usa el id del dato.
+
+</Warning>
+
+<Tip title="Buenas prácticas de TypeScript">
+
+Evita `any` y usa `unknown` cuando no conozcas un tipo; deja que TypeScript infiera lo que pueda (no anotes todo); tipa las props con `type` y exporta solo lo necesario; y prefiere uniones discriminadas a combinaciones de booleanos.
+
+</Tip>
+
+<Tip title="El compilador de React">
+
+Existe el React Compiler, que memoiza automáticamente por ti. Aun así conviene entender estos conceptos: te explican por qué funciona y qué hacer cuando no basta.
+
+</Tip>
+
+## Ejercicio
+
+Optimiza la lista de contactos: ahora, al re-renderizar el padre, todas las filas se vuelven a pintar. Haz que solo se repinte la fila que cambia.
+
+<Exercise criteria={["Envolver Fila en memo","Estabilizar la función alternar con useCallback","Usar la forma funcional de setContactos para no depender del estado","Comprobar con los contadores que al re-renderizar el padre las filas no se repintan"]} />
+
+<Playground file="dia-26/Ejercicio.starter.tsx" title="Tu turno" />
+
+<Solution file="dia-26/Ejercicio.solution.tsx" />
+
+## Resumen
+
+- Mide antes de optimizar: el Profiler te dice dónde duele de verdad.
+- Calcula el estado derivado en lugar de duplicarlo; usa keys estables, nunca el índice en listas dinámicas.
+- `memo`, `useCallback` y `useMemo` funcionan en equipo y solo valen la pena con un problema medido.
+- `lazy` y `Suspense` reducen lo que se descarga al inicio dividiendo la app por rutas o secciones.
