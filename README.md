@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/nandovejer/react-para-torpes/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/nandovejer/react-para-torpes/actions/workflows/ci.yml/badge.svg" /></a>
+  <a href="https://github.com/nandomunoz/react-para-torpes/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/nandomunoz/react-para-torpes/actions/workflows/ci.yml/badge.svg" /></a>
   <img alt="React 19" src="https://img.shields.io/badge/React-19-61dafb?labelColor=0b0b0b" />
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178c6?labelColor=0b0b0b" />
   <img alt="Next.js 16" src="https://img.shields.io/badge/Next.js-16-ffffff?labelColor=0b0b0b" />

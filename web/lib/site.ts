@@ -3,7 +3,7 @@ export const SITE = {
   tagline: "De cero a app en 30 días",
   description:
     "Curso gratuito en español de React 19 y TypeScript en 30 días, con ejemplos que corren en el navegador, ejercicios y un bonus de Next.js.",
-  repo: "https://github.com/nandovejer/react-para-torpes",
+  repo: "https://github.com/nandomunoz/react-para-torpes",
 };
 
 export const btnPrimary =
